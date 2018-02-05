@@ -1,0 +1,4 @@
+pkg/
+src/sms/.vscode/
+src/sms/vendor/
+src/sms/test/
