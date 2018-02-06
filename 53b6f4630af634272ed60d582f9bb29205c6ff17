@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5a93c517_86d93985",
+        "filename": "sms-service/doc/swagger.yaml",
+        "patchSetId": 2
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 3087
+      },
+      "writtenOn": "2018-02-06T20:07:08Z",
+      "side": 1,
+      "message": "Use different file name instead of swagger to indicate the contents of the file.",
+      "revId": "53b6f4630af634272ed60d582f9bb29205c6ff17",
+      "serverId": "14b4e41f-c4e3-4fb9-9955-6a9b5656895a",
+      "unresolved": false
+    }
+  ]
+}
