@@ -18,51 +18,79 @@ package handler
 
 import (
 	"encoding/json"
+	"github.com/gorilla/mux"
 	"net/http"
 
 	"sms/backend"
-
-	"github.com/gorilla/mux"
 )
-
-type secretDomainJSON struct {
-	name string
-}
-
-type secretKeyValue struct {
-	name  string
-	value string
-}
-
-type secretJSON struct {
-	name   string
-	values []secretKeyValue
-}
 
 type handler struct {
 	secretBackend backend.SecretBackend
 	loginBackend  backend.LoginBackend
 }
 
-// GetSecretDomainHandler returns list of secret domains
-func (h handler) GetSecretDomainHandler(w http.ResponseWriter, r *http.Request) {
-
-}
-
-// CreateSecretDomainHandler creates a secret domain with a name provided
-func (h handler) CreateSecretDomainHandler(w http.ResponseWriter, r *http.Request) {
-	var d secretDomainJSON
+// createSecretDomainHandler creates a secret domain with a name provided
+func (h handler) createSecretDomainHandler(w http.ResponseWriter, r *http.Request) {
+	var d backend.SecretDomain
 
 	err := json.NewDecoder(r.Body).Decode(&d)
 	if err != nil {
 		http.Error(w, err.Error(), 400)
 		return
 	}
+
+	h.secretBackend.CreateSecretDomain(d.Name)
 }
 
-// DeleteSecretDomainHandler deletes a secret domain with the ID provided
-func (h handler) DeleteSecretDomainHandler(w http.ResponseWriter, r *http.Request) {
+// getSecretDomainHandler returns list of secret domains
+func (h handler) getSecretDomainHandler(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	domName := vars["domName"]
 
+	h.secretBackend.GetSecretDomain(domName)
+	//encode data into json and return
+}
+
+// deleteSecretDomainHandler deletes a secret domain with the name provided
+func (h handler) deleteSecretDomainHandler(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	domName := vars["domName"]
+
+	h.secretBackend.DeleteSecretDomain(domName)
+}
+
+// createSecretHandler handles creation of secrets on a given domain name
+func (h handler) createSecretHandler(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	domName := vars["domName"]
+
+	var b backend.Secret
+	err := json.NewDecoder(r.Body).Decode(&b)
+	if err != nil {
+		http.Error(w, err.Error(), 400)
+		return
+	}
+
+	h.secretBackend.CreateSecret(domName, b)
+}
+
+// getSecretHandler handles reading a secret by given domain name and secret name
+func (h handler) getSecretHandler(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	domName := vars["domName"]
+	secName := vars["secretName"]
+
+	h.secretBackend.GetSecret(domName, secName)
+	//encode and return response
+}
+
+// deleteSecretHandler handles deleting a secret by given domain name and secret name
+func (h handler) deleteSecretHandler(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	domName := vars["domName"]
+	secName := vars["secretName"]
+
+	h.secretBackend.DeleteSecret(domName, secName)
 }
 
 // struct that tracks various status items for SMS and backend
@@ -70,19 +98,24 @@ type status struct {
 	Seal bool `json:"sealstatus"`
 }
 
-// StatusHandler returns information related to SMS and SMS backend services
-func (h handler) StatusHandler(w http.ResponseWriter, r *http.Request) {
-	s := h.secretBackend.GetStatus()
-	status := status{Seal: s}
-	err := json.NewEncoder(w).Encode(status)
+// statusHandler returns information related to SMS and SMS backend services
+func (h handler) statusHandler(w http.ResponseWriter, r *http.Request) {
+	s, err := h.secretBackend.GetStatus()
 	if err != nil {
-		http.Error(w, err.Error(), 400)
+		http.Error(w, err.Error(), 500)
+		return
+	}
+
+	status := status{Seal: s}
+	err = json.NewEncoder(w).Encode(status)
+	if err != nil {
+		http.Error(w, err.Error(), 500)
 		return
 	}
 }
 
-// LoginHandler handles login via password and username
-func (h handler) LoginHandler(w http.ResponseWriter, r *http.Request) {
+// loginHandler handles login via password and username
+func (h handler) loginHandler(w http.ResponseWriter, r *http.Request) {
 
 }
 
@@ -93,13 +126,17 @@ func CreateRouter(b backend.SecretBackend) http.Handler {
 	// Create a new mux to handle URL endpoints
 	router := mux.NewRouter()
 
-	router.HandleFunc("/v1/sms/login", h.LoginHandler).Methods("POST")
+	router.HandleFunc("/v1/sms/login", h.loginHandler).Methods("POST")
 
-	router.HandleFunc("/v1/sms/status", h.StatusHandler).Methods("GET")
+	router.HandleFunc("/v1/sms/status", h.statusHandler).Methods("GET")
 
-	router.HandleFunc("/v1/sms/domain", h.GetSecretDomainHandler).Methods("GET")
-	router.HandleFunc("/v1/sms/domain", h.CreateSecretDomainHandler).Methods("POST")
-	router.HandleFunc("/v1/sms/domain/{domName}", h.DeleteSecretDomainHandler).Methods("DELETE")
+	router.HandleFunc("/v1/sms/domain", h.createSecretDomainHandler).Methods("POST")
+	router.HandleFunc("/v1/sms/domain/{domName}", h.getSecretDomainHandler).Methods("GET")
+	router.HandleFunc("/v1/sms/domain/{domName}", h.deleteSecretDomainHandler).Methods("DELETE")
+
+	router.HandleFunc("v1/sms/domain/{domainName}/secret", h.createSecretHandler).Methods("POST")
+	router.HandleFunc("v1/sms/domain/{domainName}/secret/{secretName}", h.getSecretHandler).Methods("GET")
+	router.HandleFunc("v1/sms/domain/{domainName}/secret/{secretName}", h.deleteSecretHandler).Methods("DELETE")
 
 	return router
 }

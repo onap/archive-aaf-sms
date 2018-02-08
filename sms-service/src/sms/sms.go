@@ -28,9 +28,16 @@ import (
 
 func main() {
 	// Read Configuration File
-	smsConf := smsconfig.ReadConfigFile("smsconfig.json")
+	smsConf, err := smsconfig.ReadConfigFile("smsconfig.json")
+	if err != nil {
+		log.Fatal(err)
+	}
 
-	backendImpl := smsbackend.InitSecretBackend()
+	backendImpl, err := smsbackend.InitSecretBackend()
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	httpRouter := smshandler.CreateRouter(backendImpl)
 
 	// TODO: Use CA certificate from AAF
@@ -42,6 +49,6 @@ func main() {
 		TLSConfig: tlsConfig,
 	}
 
-	err := httpServer.ListenAndServeTLS(smsConf.ServerCert, smsConf.ServerKey)
+	err = httpServer.ListenAndServeTLS(smsConf.ServerCert, smsConf.ServerKey)
 	log.Fatal(err)
 }
