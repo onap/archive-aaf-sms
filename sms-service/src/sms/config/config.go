@@ -18,7 +18,6 @@ package config
 
 import (
 	"encoding/json"
-	"log"
 	"os"
 )
 
@@ -34,19 +33,19 @@ type SMSConfiguration struct {
 var SMSConfig *SMSConfiguration
 
 // ReadConfigFile reads the specified smsConfig file to setup some env variables
-func ReadConfigFile(file string) *SMSConfiguration {
+func ReadConfigFile(file string) (*SMSConfiguration, error) {
 	if SMSConfig == nil {
 		f, err := os.Open(file)
 		if err != nil {
-			log.Fatalf("Unable to find file %s", file)
+			return nil, err
 		}
 
 		decoder := json.NewDecoder(f)
 		err = decoder.Decode(&SMSConfig)
 		if err != nil {
-			log.Fatal(err)
+			return nil, err
 		}
 	}
 
-	return SMSConfig
+	return SMSConfig, nil
 }

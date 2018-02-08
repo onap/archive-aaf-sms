@@ -16,30 +16,50 @@
 
 package backend
 
-import (
-	vaultwrap "sms/backend/vault"
-)
-
-// SecretDomain struct that will be passed around between http handler
-// and code that interfaces with vault
+// SecretDomain is where Secrets are stored.
+// A single domain can have any number of secrets
 type SecretDomain struct {
-	ID         int
-	Name       string
-	MountPoint string
+	UUID string `json:"uuid"`
+	Name string `json:"name"`
+}
+
+// SecretKeyValue is building block for a Secret
+type SecretKeyValue struct {
+	Key   string `json:"name"`
+	Value string `json:"value"`
+}
+
+// Secret is the struct that defines the structure of a secret
+// A single Secret can have any number of SecretKeyValue pairs
+type Secret struct {
+	Name   string           `json:"name"`
+	Values []SecretKeyValue `json:"values"`
 }
 
 // SecretBackend interface that will be implemented for various secret backends
 type SecretBackend interface {
-	Init()
+	Init() error
 
-	GetStatus() bool
+	GetStatus() (bool, error)
+	GetSecretDomain(name string) (SecretDomain, error)
+	GetSecret(dom string, sec string) (Secret, error)
+
+	CreateSecretDomain(name string) (SecretDomain, error)
+	CreateSecret(dom string, sec Secret) (Secret, error)
+
+	DeleteSecretDomain(name string) error
+	DeleteSecret(dom string, name string) error
 }
 
 // InitSecretBackend returns an interface implementation
-func InitSecretBackend() SecretBackend {
-	backendImpl := &vaultwrap.Vault{}
-	backendImpl.Init()
-	return backendImpl
+func InitSecretBackend() (SecretBackend, error) {
+	backendImpl := &Vault{}
+	err := backendImpl.Init()
+	if err != nil {
+		return nil, err
+	}
+
+	return backendImpl, nil
 }
 
 // LoginBackend Interface that will be implemented for various login backends
