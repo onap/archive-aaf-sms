@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5a93c517_c2f640f9",
+        "filename": "sms-service/src/sms/Makefile",
+        "patchSetId": 3
+      },
+      "lineNbr": 19,
+      "author": {
+        "id": 991
+      },
+      "writtenOn": "2018-02-09T22:50:24Z",
+      "side": 1,
+      "message": "I\u0027ll update \"./...\" in KV store makefile as well.",
+      "revId": "662ef00510ee19f71c6aac7f0f09c6cbe6189c6e",
+      "serverId": "14b4e41f-c4e3-4fb9-9955-6a9b5656895a",
+      "unresolved": false
+    }
+  ]
+}
