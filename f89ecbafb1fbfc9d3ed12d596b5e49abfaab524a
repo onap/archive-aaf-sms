@@ -1,0 +1,96 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5a93c517_2fbca805",
+        "filename": "sms-service/src/sms/auth/auth_test.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 19,
+      "author": {
+        "id": 301
+      },
+      "writtenOn": "2018-02-12T06:07:05Z",
+      "side": 1,
+      "message": "Use the license structure similar to what we have in the other go files.",
+      "range": {
+        "startLine": 1,
+        "startChar": 0,
+        "endLine": 19,
+        "endChar": 3
+      },
+      "revId": "f89ecbafb1fbfc9d3ed12d596b5e49abfaab524a",
+      "serverId": "14b4e41f-c4e3-4fb9-9955-6a9b5656895a",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5a93c517_ef39e0a4",
+        "filename": "sms-service/src/sms/auth/auth_test.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 30,
+      "author": {
+        "id": 301
+      },
+      "writtenOn": "2018-02-12T06:07:05Z",
+      "side": 1,
+      "message": "We don\u0027t need block comments\u0027 style here. Use // type comments and start sentence with the function name if the function is an exported function which is the case here.",
+      "range": {
+        "startLine": 27,
+        "startChar": 0,
+        "endLine": 30,
+        "endChar": 3
+      },
+      "revId": "f89ecbafb1fbfc9d3ed12d596b5e49abfaab524a",
+      "serverId": "14b4e41f-c4e3-4fb9-9955-6a9b5656895a",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5a93c517_8f4a9c24",
+        "filename": "sms-service/src/sms/auth/auth_test.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 32,
+      "author": {
+        "id": 301
+      },
+      "writtenOn": "2018-02-12T06:07:05Z",
+      "side": 1,
+      "message": "Use tls.VersionTLS12 instead of 771. More descriptive.",
+      "range": {
+        "startLine": 32,
+        "startChar": 0,
+        "endLine": 32,
+        "endChar": 11
+      },
+      "revId": "f89ecbafb1fbfc9d3ed12d596b5e49abfaab524a",
+      "serverId": "14b4e41f-c4e3-4fb9-9955-6a9b5656895a",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5a93c517_2f5348e3",
+        "filename": "sms-service/src/sms/auth/auth_test.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 33,
+      "author": {
+        "id": 301
+      },
+      "writtenOn": "2018-02-12T06:07:05Z",
+      "side": 1,
+      "message": "This might error out if server.cert is not found. Check for that return value. auth.go needs to be updated so that err is returned instead of the program erroring out.",
+      "range": {
+        "startLine": 33,
+        "startChar": 30,
+        "endLine": 33,
+        "endChar": 41
+      },
+      "revId": "f89ecbafb1fbfc9d3ed12d596b5e49abfaab524a",
+      "serverId": "14b4e41f-c4e3-4fb9-9955-6a9b5656895a",
+      "unresolved": false
+    }
+  ]
+}
