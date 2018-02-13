@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5a93c517_bec9c75a",
+        "filename": "sms-service/src/sms/Makefile",
+        "patchSetId": 2
+      },
+      "lineNbr": 10,
+      "author": {
+        "id": 991
+      },
+      "writtenOn": "2018-02-13T23:24:22Z",
+      "side": 1,
+      "message": "Remove test from build.",
+      "revId": "97e418b6ada5f253be1f2df4fdb05919c3bbc082",
+      "serverId": "14b4e41f-c4e3-4fb9-9955-6a9b5656895a",
+      "unresolved": false
+    }
+  ]
+}
