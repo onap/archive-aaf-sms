@@ -1,0 +1,7 @@
+{
+    "cafile": "testca.pem",
+    "servercert": "testserver.cert",
+    "serverkey": "testserver.key",
+
+    "vaultaddress": "http://localhost:8200"
+}
