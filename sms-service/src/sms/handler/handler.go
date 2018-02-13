@@ -24,6 +24,8 @@ import (
 	"sms/backend"
 )
 
+// handler stores two interface implementations that implement
+// the backend functionality
 type handler struct {
 	secretBackend backend.SecretBackend
 	loginBackend  backend.LoginBackend
@@ -94,7 +96,7 @@ func (h handler) deleteSecretHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 // struct that tracks various status items for SMS and backend
-type status struct {
+type backendStatus struct {
 	Seal bool `json:"sealstatus"`
 }
 
@@ -106,7 +108,7 @@ func (h handler) statusHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	status := status{Seal: s}
+	status := backendStatus{Seal: s}
 	err = json.NewEncoder(w).Encode(status)
 	if err != nil {
 		http.Error(w, err.Error(), 500)
@@ -120,6 +122,7 @@ func (h handler) loginHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 // CreateRouter returns an http.Handler for the registered URLs
+// Takes an interface implementation as input
 func CreateRouter(b backend.SecretBackend) http.Handler {
 	h := handler{secretBackend: b}
 
