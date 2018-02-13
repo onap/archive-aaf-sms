@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5a93c517_3be5ca37",
+        "filename": "sms-service/src/sms/sms.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 55,
+      "author": {
+        "id": 3087
+      },
+      "writtenOn": "2018-02-13T00:48:08Z",
+      "side": 1,
+      "message": "May be a comment here, saying if it returns its an error.",
+      "revId": "bb1feb30c22bb3e23f633ee44eed9707b2d4a3b5",
+      "serverId": "14b4e41f-c4e3-4fb9-9955-6a9b5656895a",
+      "unresolved": false
+    }
+  ]
+}
