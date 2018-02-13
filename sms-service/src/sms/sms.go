@@ -41,7 +41,10 @@ func main() {
 	httpRouter := smshandler.CreateRouter(backendImpl)
 
 	// TODO: Use CA certificate from AAF
-	tlsConfig := smsauth.GetTLSConfig(smsConf.CAFile)
+	tlsConfig, err := smsauth.GetTLSConfig(smsConf.CAFile)
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	httpServer := &http.Server{
 		Handler:   httpRouter,

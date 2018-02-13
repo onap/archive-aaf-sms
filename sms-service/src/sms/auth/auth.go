@@ -20,21 +20,19 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"io/ioutil"
-	"log"
 )
 
 var tlsConfig *tls.Config
 
 // GetTLSConfig initializes a tlsConfig using the CA's certificate
 // This config is then used to enable the server for mutual TLS
-func GetTLSConfig(caCertFile string) *tls.Config {
+func GetTLSConfig(caCertFile string) (*tls.Config, error) {
 	// Initialize tlsConfig once
 	if tlsConfig == nil {
 		caCert, err := ioutil.ReadFile(caCertFile)
 
 		if err != nil {
-			log.Fatal("Error reading CA Certificate")
-			log.Fatal(err)
+			return nil, err
 		}
 
 		caCertPool := x509.NewCertPool()
@@ -47,5 +45,5 @@ func GetTLSConfig(caCertFile string) *tls.Config {
 		}
 		tlsConfig.BuildNameToCertificate()
 	}
-	return tlsConfig
+	return tlsConfig, nil
 }
