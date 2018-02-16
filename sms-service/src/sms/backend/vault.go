@@ -18,8 +18,8 @@ package backend
 
 import (
 	vaultapi "github.com/hashicorp/vault/api"
-
 	smsconfig "sms/config"
+        "fmt"
 )
 
 // Vault is the main Struct used in Backend to initialize the struct
@@ -77,6 +77,25 @@ func (v *Vault) CreateSecretDomain(name string) (SecretDomain, error) {
 // CreateSecret creates a secret mounted on a particular domain name
 // The secret itself is mounted on a path specified by name
 func (v *Vault) CreateSecret(dom string, sec Secret) (Secret, error) {
+
+        var m map[string]interface{}
+        m = make(map[string]interface{})
+
+        for _,element := range sec.Values{
+
+           m[element.Key] = element.Value
+
+        }
+
+        writeResponse, err := v.vaultClient.Logical().Write(dom+"/"+sec.Name, m)
+
+        if writeResponse == nil {
+              fmt.Println("-- secret written to Consul --")
+           }
+
+        if err != nil {
+
+           }
 
 	return Secret{}, nil
 }
