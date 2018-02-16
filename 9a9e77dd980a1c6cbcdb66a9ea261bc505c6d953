@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5a93c517_6733ab63",
+        "filename": "sms-service/src/sms/backend/vault.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 92,
+      "author": {
+        "id": 301
+      },
+      "writtenOn": "2018-02-16T16:52:18Z",
+      "side": 1,
+      "message": "writeResponse should not be nil if the secret was written to vault. It should return a pointer to the *Secret struct defined in the vault api.",
+      "range": {
+        "startLine": 92,
+        "startChar": 8,
+        "endLine": 92,
+        "endChar": 31
+      },
+      "revId": "9a9e77dd980a1c6cbcdb66a9ea261bc505c6d953",
+      "serverId": "14b4e41f-c4e3-4fb9-9955-6a9b5656895a",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5a93c517_07342748",
+        "filename": "sms-service/src/sms/backend/vault.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 93,
+      "author": {
+        "id": 301
+      },
+      "writtenOn": "2018-02-16T16:52:18Z",
+      "side": 1,
+      "message": "We don\u0027t need the Println. Instead maybe we can return the resPonse itself.",
+      "range": {
+        "startLine": 93,
+        "startChar": 14,
+        "endLine": 93,
+        "endChar": 59
+      },
+      "revId": "9a9e77dd980a1c6cbcdb66a9ea261bc505c6d953",
+      "serverId": "14b4e41f-c4e3-4fb9-9955-6a9b5656895a",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5a93c517_670c0ba6",
+        "filename": "sms-service/src/sms/backend/vault.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 98,
+      "author": {
+        "id": 301
+      },
+      "writtenOn": "2018-02-16T16:52:18Z",
+      "side": 1,
+      "message": "err check should be before writeResponse.\nif you get an error return the err.",
+      "range": {
+        "startLine": 96,
+        "startChar": 8,
+        "endLine": 98,
+        "endChar": 12
+      },
+      "revId": "9a9e77dd980a1c6cbcdb66a9ea261bc505c6d953",
+      "serverId": "14b4e41f-c4e3-4fb9-9955-6a9b5656895a",
+      "unresolved": false
+    }
+  ]
+}
