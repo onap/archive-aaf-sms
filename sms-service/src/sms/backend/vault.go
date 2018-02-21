@@ -78,7 +78,27 @@ func (v *Vault) CreateSecretDomain(name string) (SecretDomain, error) {
 // The secret itself is mounted on a path specified by name
 func (v *Vault) CreateSecret(dom string, sec Secret) (Secret, error) {
 
-	return Secret{}, nil
+        var m map[string]interface{}
+        m = make(map[string]interface{})
+        var secret Secret
+
+        for _,element := range sec.Values{
+
+           m[element.Key] = element.Value
+
+        }
+
+        _ , err := v.vaultClient.Logical().Write(dom+"/"+sec.Name, m)
+
+        if err != nil {
+
+              return secret, err
+
+           }
+
+
+        return secret, nil
+
 }
 
 // DeleteSecretDomain deletes a secret domain which translates to
