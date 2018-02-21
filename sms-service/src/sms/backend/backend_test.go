@@ -22,14 +22,16 @@ import (
 )
 
 func TestInitSecretBackend(t *testing.T) {
-	smsconfig.SMSConfig = &smsconfig.SMSConfiguration{VaultAddress: "http://localhost:8200"}
+	smsconfig.SMSConfig = &smsconfig.SMSConfiguration{
+		VaultAddress: "http://localhost:8200",
+	}
 	sec, err := InitSecretBackend()
-	// We don't expect an error to be returned as Init only creates a client
-	// Does not expect backend to be running
-	if err != nil {
+	// We expect an error to be returned as Init expects
+	// backend to be running
+	if err == nil {
 		t.Fatal("InitSecretBackend : error creating")
 	}
-	if sec == nil {
-		t.Fatal("InitSecretBackend: returned SecretBackend was nil")
+	if sec != nil {
+		t.Fatal("InitSecretBackend: returned SecretBackend was *NOT* nil, expected nil")
 	}
 }

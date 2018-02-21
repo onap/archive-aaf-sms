@@ -16,6 +16,10 @@
 
 package backend
 
+import (
+	smsconfig "sms/config"
+)
+
 // SecretDomain is where Secrets are stored.
 // A single domain can have any number of secrets
 type SecretDomain struct {
@@ -32,8 +36,8 @@ type SecretKeyValue struct {
 // Secret is the struct that defines the structure of a secret
 // A single Secret can have any number of SecretKeyValue pairs
 type Secret struct {
-	Name   string           `json:"name"`
-	Values []SecretKeyValue `json:"values"`
+	Name   string            `json:"name"`
+	Values map[string]string `json:"values"`
 }
 
 // SecretBackend interface that will be implemented for various secret backends
@@ -53,7 +57,11 @@ type SecretBackend interface {
 
 // InitSecretBackend returns an interface implementation
 func InitSecretBackend() (SecretBackend, error) {
-	backendImpl := &Vault{}
+	backendImpl := &Vault{
+		vaultAddress: smsconfig.SMSConfig.VaultAddress,
+		vaultToken:   smsconfig.SMSConfig.VaultToken,
+	}
+
 	err := backendImpl.Init()
 	if err != nil {
 		return nil, err
