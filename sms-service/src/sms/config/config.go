@@ -21,12 +21,16 @@ import (
 	"os"
 )
 
+// SMSConfiguration loads up all the values that are used to configure
+// backend implementations
+// TODO: Review these and see if they can be created/discovered dynamically
 type SMSConfiguration struct {
 	CAFile     string `json:"cafile"`
 	ServerCert string `json:"servercert"`
 	ServerKey  string `json:"serverkey"`
 
 	VaultAddress string `json:"vaultaddress"`
+	VaultToken   string `json:"vaulttoken"`
 }
 
 // SMSConfig is the structure that stores the configuration

@@ -35,8 +35,8 @@ func TestGetTLSConfig(t *testing.T) {
 		if int(actual) != expected {
 			t.Errorf("Test Failed due to version mismatch")
 		}
-	if tlsConfig == nil {
-		t.Errorf("Test Failed due to GetTLSConfig returned nil")
-	        }
+		if tlsConfig == nil {
+			t.Errorf("Test Failed due to GetTLSConfig returned nil")
+		}
 	}
 }

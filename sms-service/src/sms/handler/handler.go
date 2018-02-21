@@ -21,19 +21,19 @@ import (
 	"github.com/gorilla/mux"
 	"net/http"
 
-	"sms/backend"
+	smsbackend "sms/backend"
 )
 
 // handler stores two interface implementations that implement
 // the backend functionality
 type handler struct {
-	secretBackend backend.SecretBackend
-	loginBackend  backend.LoginBackend
+	secretBackend smsbackend.SecretBackend
+	loginBackend  smsbackend.LoginBackend
 }
 
 // createSecretDomainHandler creates a secret domain with a name provided
 func (h handler) createSecretDomainHandler(w http.ResponseWriter, r *http.Request) {
-	var d backend.SecretDomain
+	var d smsbackend.SecretDomain
 
 	err := json.NewDecoder(r.Body).Decode(&d)
 	if err != nil {
@@ -41,7 +41,17 @@ func (h handler) createSecretDomainHandler(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	h.secretBackend.CreateSecretDomain(d.Name)
+	dom, err := h.secretBackend.CreateSecretDomain(d.Name)
+	if err != nil {
+		http.Error(w, err.Error(), 400)
+		return
+	}
+
+	err = json.NewEncoder(w).Encode(dom)
+	if err != nil {
+		http.Error(w, err.Error(), 400)
+		return
+	}
 }
 
 // getSecretDomainHandler returns list of secret domains
@@ -63,10 +73,12 @@ func (h handler) deleteSecretDomainHandler(w http.ResponseWriter, r *http.Reques
 
 // createSecretHandler handles creation of secrets on a given domain name
 func (h handler) createSecretHandler(w http.ResponseWriter, r *http.Request) {
+	// Get domain name from URL
 	vars := mux.Vars(r)
 	domName := vars["domName"]
 
-	var b backend.Secret
+	// Get secrets to be stored from body
+	var b smsbackend.Secret
 	err := json.NewDecoder(r.Body).Decode(&b)
 	if err != nil {
 		http.Error(w, err.Error(), 400)
@@ -121,9 +133,19 @@ func (h handler) loginHandler(w http.ResponseWriter, r *http.Request) {
 
 }
 
+// initSMSHandler
+func (h handler) initSMSHandler(w http.ResponseWriter, r *http.Request) {
+
+}
+
+// unsealHandler
+func (h handler) unsealHandler(w http.ResponseWriter, r *http.Request) {
+
+}
+
 // CreateRouter returns an http.Handler for the registered URLs
 // Takes an interface implementation as input
-func CreateRouter(b backend.SecretBackend) http.Handler {
+func CreateRouter(b smsbackend.SecretBackend) http.Handler {
 	h := handler{secretBackend: b}
 
 	// Create a new mux to handle URL endpoints
@@ -131,7 +153,11 @@ func CreateRouter(b backend.SecretBackend) http.Handler {
 
 	router.HandleFunc("/v1/sms/login", h.loginHandler).Methods("POST")
 
+	// Initialization APIs which will be used by quorum client
+	// to unseal and to provide root token to sms service
 	router.HandleFunc("/v1/sms/status", h.statusHandler).Methods("GET")
+	router.HandleFunc("/v1/sms/unseal", h.unsealHandler).Methods("POST")
+	router.HandleFunc("/v1/sms/init", h.initSMSHandler).Methods("POST")
 
 	router.HandleFunc("/v1/sms/domain", h.createSecretDomainHandler).Methods("POST")
 	router.HandleFunc("/v1/sms/domain/{domName}", h.getSecretDomainHandler).Methods("GET")
