@@ -36,8 +36,8 @@ type SecretKeyValue struct {
 // Secret is the struct that defines the structure of a secret
 // A single Secret can have any number of SecretKeyValue pairs
 type Secret struct {
-	Name   string            `json:"name"`
-	Values map[string]string `json:"values"`
+	Name   string                 `json:"name"`
+	Values map[string]interface{} `json:"values"`
 }
 
 // SecretBackend interface that will be implemented for various secret backends
@@ -49,7 +49,7 @@ type SecretBackend interface {
 	GetSecret(dom string, sec string) (Secret, error)
 
 	CreateSecretDomain(name string) (SecretDomain, error)
-	CreateSecret(dom string, sec Secret) (Secret, error)
+	CreateSecret(dom string, sec Secret) error
 
 	DeleteSecretDomain(name string) error
 	DeleteSecret(dom string, name string) error

@@ -54,8 +54,8 @@ func (b *TestBackend) CreateSecretDomain(name string) (smsbackend.SecretDomain, 
 	return smsbackend.SecretDomain{}, nil
 }
 
-func (b *TestBackend) CreateSecret(dom string, sec smsbackend.Secret) (smsbackend.Secret, error) {
-	return smsbackend.Secret{}, nil
+func (b *TestBackend) CreateSecret(dom string, sec smsbackend.Secret) error {
+	return nil
 }
 
 func (b *TestBackend) DeleteSecretDomain(name string) error {

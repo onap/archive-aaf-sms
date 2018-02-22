@@ -20,6 +20,7 @@ import (
 	uuid "github.com/hashicorp/go-uuid"
 	vaultapi "github.com/hashicorp/vault/api"
 
+	"errors"
 	"fmt"
 	"log"
 	"strings"
@@ -128,9 +129,21 @@ func (v *Vault) CreateSecretDomain(name string) (SecretDomain, error) {
 
 // CreateSecret creates a secret mounted on a particular domain name
 // The secret itself is mounted on a path specified by name
-func (v *Vault) CreateSecret(dom string, sec Secret) (Secret, error) {
+func (v *Vault) CreateSecret(dom string, sec Secret) error {
+	err := v.checkToken()
+	if err != nil {
+		return errors.New("Token checking returned an error" + err.Error())
+	}
 
-	return Secret{}, nil
+	dom = v.vaultMount + "/" + dom
+
+	// Vault write return is empty on successful write
+	_, err = v.vaultClient.Logical().Write(dom+"/"+sec.Name, sec.Values)
+	if err != nil {
+		return errors.New("Unable to create Secret at provided path")
+	}
+
+	return nil
 }
 
 // DeleteSecretDomain deletes a secret domain which translates to

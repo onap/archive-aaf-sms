@@ -18,6 +18,7 @@ package handler
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/gorilla/mux"
 	"net/http"
 
@@ -43,7 +44,7 @@ func (h handler) createSecretDomainHandler(w http.ResponseWriter, r *http.Reques
 
 	dom, err := h.secretBackend.CreateSecretDomain(d.Name)
 	if err != nil {
-		http.Error(w, err.Error(), 400)
+		http.Error(w, err.Error(), 500)
 		return
 	}
 
@@ -59,7 +60,8 @@ func (h handler) getSecretDomainHandler(w http.ResponseWriter, r *http.Request) 
 	vars := mux.Vars(r)
 	domName := vars["domName"]
 
-	h.secretBackend.GetSecretDomain(domName)
+	fmt.Fprintf(w, "Got req %s", domName)
+	//h.secretBackend.GetSecretDomain(domName)
 	//encode data into json and return
 }
 
@@ -85,7 +87,13 @@ func (h handler) createSecretHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	h.secretBackend.CreateSecret(domName, b)
+	err = h.secretBackend.CreateSecret(domName, b)
+	if err != nil {
+		http.Error(w, err.Error(), 500)
+		return
+	}
+
+	w.WriteHeader(http.StatusCreated)
 }
 
 // getSecretHandler handles reading a secret by given domain name and secret name
@@ -163,9 +171,9 @@ func CreateRouter(b smsbackend.SecretBackend) http.Handler {
 	router.HandleFunc("/v1/sms/domain/{domName}", h.getSecretDomainHandler).Methods("GET")
 	router.HandleFunc("/v1/sms/domain/{domName}", h.deleteSecretDomainHandler).Methods("DELETE")
 
-	router.HandleFunc("v1/sms/domain/{domainName}/secret", h.createSecretHandler).Methods("POST")
-	router.HandleFunc("v1/sms/domain/{domainName}/secret/{secretName}", h.getSecretHandler).Methods("GET")
-	router.HandleFunc("v1/sms/domain/{domainName}/secret/{secretName}", h.deleteSecretHandler).Methods("DELETE")
+	router.HandleFunc("/v1/sms/domain/{domName}/secret", h.createSecretHandler).Methods("POST")
+	router.HandleFunc("/v1/sms/domain/{domName}/secret/{secretName}", h.getSecretHandler).Methods("GET")
+	router.HandleFunc("/v1/sms/domain/{domName}/secret/{secretName}", h.deleteSecretHandler).Methods("DELETE")
 
 	return router
 }
