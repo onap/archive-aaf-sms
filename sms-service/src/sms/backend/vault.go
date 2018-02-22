@@ -95,9 +95,25 @@ func (v *Vault) GetSecretDomain(name string) (SecretDomain, error) {
 // GetSecret returns a secret mounted on a particular domain name
 // The secret itself is referenced via its name which translates to
 // a mount path in vault
-func (v *Vault) GetSecret(dom string, sec string) (Secret, error) {
+func (v *Vault) GetSecret(dom string, name string) (Secret, error) {
+	err := v.checkToken()
+	if err != nil {
+		return Secret{}, errors.New("Token check returned error: " + err.Error())
+	}
 
-	return Secret{}, nil
+	dom = v.vaultMount + "/" + dom
+
+	sec, err := v.vaultClient.Logical().Read(dom + "/" + name)
+	if err != nil {
+		return Secret{}, errors.New("unable to read Secret at provided path")
+	}
+
+	// sec and err are nil in the case where a path does not exist
+	if sec == nil {
+		return Secret{}, errors.New("Secret not found at the provided path")
+	}
+
+	return Secret{Name: name, Values: sec.Data}, nil
 }
 
 // CreateSecretDomain mounts the kv backend on a path with the given name

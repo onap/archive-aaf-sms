@@ -102,8 +102,17 @@ func (h handler) getSecretHandler(w http.ResponseWriter, r *http.Request) {
 	domName := vars["domName"]
 	secName := vars["secretName"]
 
-	h.secretBackend.GetSecret(domName, secName)
-	//encode and return response
+	sec, err := h.secretBackend.GetSecret(domName, secName)
+	if err != nil {
+		http.Error(w, err.Error(), 500)
+		return
+	}
+
+	err = json.NewEncoder(w).Encode(sec)
+	if err != nil {
+		http.Error(w, err.Error(), 400)
+		return
+	}
 }
 
 // deleteSecretHandler handles deleting a secret by given domain name and secret name
