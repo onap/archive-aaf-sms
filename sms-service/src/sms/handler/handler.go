@@ -115,6 +115,24 @@ func (h handler) getSecretHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// listSecretHandler handles listing all secrets under a particular domain name
+func (h handler) listSecretHandler(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	domName := vars["domName"]
+
+	sec, err := h.secretBackend.ListSecret(domName)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	err = json.NewEncoder(w).Encode(sec)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+}
+
 // deleteSecretHandler handles deleting a secret by given domain name and secret name
 func (h handler) deleteSecretHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
@@ -181,6 +199,7 @@ func CreateRouter(b smsbackend.SecretBackend) http.Handler {
 	router.HandleFunc("/v1/sms/domain/{domName}", h.deleteSecretDomainHandler).Methods("DELETE")
 
 	router.HandleFunc("/v1/sms/domain/{domName}/secret", h.createSecretHandler).Methods("POST")
+	router.HandleFunc("/v1/sms/domain/{domName}/secret", h.listSecretHandler).Methods("GET")
 	router.HandleFunc("/v1/sms/domain/{domName}/secret/{secretName}", h.getSecretHandler).Methods("GET")
 	router.HandleFunc("/v1/sms/domain/{domName}/secret/{secretName}", h.deleteSecretHandler).Methods("DELETE")
 
