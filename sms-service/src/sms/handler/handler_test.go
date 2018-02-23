@@ -50,6 +50,10 @@ func (b *TestBackend) GetSecret(dom string, sec string) (smsbackend.Secret, erro
 	return smsbackend.Secret{}, nil
 }
 
+func (b *TestBackend) ListSecret(dom string) ([]string, error) {
+	return nil, nil
+}
+
 func (b *TestBackend) CreateSecretDomain(name string) (smsbackend.SecretDomain, error) {
 	return smsbackend.SecretDomain{}, nil
 }
