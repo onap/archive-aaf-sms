@@ -194,8 +194,24 @@ func (v *Vault) initRole() error {
 	// Delete role if it already exists
 	v.vaultClient.Logical().Delete("auth/approle/role/" + rName)
 
+	//Check if approle is mounted
+	authMounts, err := v.vaultClient.Sys().ListAuth()
+	if err != nil {
+		return err
+	}
+
+	approleMounted := false
+	for k, v := range authMounts {
+		if v.Type == "approle" && k == "approle/" {
+			approleMounted = true
+			break
+		}
+	}
+
 	// Mount approle in case its not already mounted
-	v.vaultClient.Sys().EnableAuth("approle", "approle", "")
+	if !approleMounted {
+		v.vaultClient.Sys().EnableAuth("approle", "approle", "")
+	}
 
 	// Create a role-id
 	v.vaultClient.Logical().Write("auth/approle/role/"+rName, data)
