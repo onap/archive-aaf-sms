@@ -153,7 +153,7 @@ func (v *Vault) CreateSecret(dom string, sec Secret) error {
 
 	dom = v.vaultMount + "/" + dom
 
-	// Vault write return is empty on successful write
+	// Vault return is empty on successful write
 	_, err = v.vaultClient.Logical().Write(dom+"/"+sec.Name, sec.Values)
 	if err != nil {
 		return errors.New("Unable to create Secret at provided path")
@@ -171,6 +171,18 @@ func (v *Vault) DeleteSecretDomain(name string) error {
 
 // DeleteSecret deletes a secret mounted on the path provided
 func (v *Vault) DeleteSecret(dom string, name string) error {
+	err := v.checkToken()
+	if err != nil {
+		return errors.New("Token checking returned an error" + err.Error())
+	}
+
+	dom = v.vaultMount + "/" + dom
+
+	// Vault return is empty on successful delete
+	_, err = v.vaultClient.Logical().Delete(dom + "/" + name)
+	if err != nil {
+		return errors.New("Unable to delete Secret at provided path")
+	}
 
 	return nil
 }

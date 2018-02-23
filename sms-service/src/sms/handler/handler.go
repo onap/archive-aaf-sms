@@ -121,7 +121,11 @@ func (h handler) deleteSecretHandler(w http.ResponseWriter, r *http.Request) {
 	domName := vars["domName"]
 	secName := vars["secretName"]
 
-	h.secretBackend.DeleteSecret(domName, secName)
+	err := h.secretBackend.DeleteSecret(domName, secName)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 }
 
 // struct that tracks various status items for SMS and backend
