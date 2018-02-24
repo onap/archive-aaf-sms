@@ -48,6 +48,8 @@ type SecretBackend interface {
 	GetSecretDomain(name string) (SecretDomain, error)
 	GetSecret(dom string, sec string) (Secret, error)
 
+	ListSecret(dom string) ([]string, error)
+
 	CreateSecretDomain(name string) (SecretDomain, error)
 	CreateSecret(dom string, sec Secret) error
 
