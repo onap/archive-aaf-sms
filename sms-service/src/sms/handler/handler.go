@@ -70,7 +70,11 @@ func (h handler) deleteSecretDomainHandler(w http.ResponseWriter, r *http.Reques
 	vars := mux.Vars(r)
 	domName := vars["domName"]
 
-	h.secretBackend.DeleteSecretDomain(domName)
+	err := h.secretBackend.DeleteSecretDomain(domName)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 }
 
 // createSecretHandler handles creation of secrets on a given domain name

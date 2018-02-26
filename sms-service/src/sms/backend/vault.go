@@ -198,6 +198,18 @@ func (v *Vault) CreateSecret(dom string, sec Secret) error {
 // DeleteSecretDomain deletes a secret domain which translates to
 // an unmount operation on the given path in Vault
 func (v *Vault) DeleteSecretDomain(name string) error {
+	err := v.checkToken()
+	if err != nil {
+		return err
+	}
+
+	name = strings.TrimSpace(name)
+	mountPath := v.vaultMount + "/" + name
+
+	err = v.vaultClient.Sys().Unmount(mountPath)
+	if err != nil {
+		return errors.New("Unable to delete domain specified")
+	}
 
 	return nil
 }
