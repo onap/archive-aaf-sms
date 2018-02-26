@@ -1,6 +1,6 @@
 {
     "cafile":     "auth/selfsignedca.pem",
-    "servercert": "auth/server_cat.cert",
+    "servercert": "auth/server.cert",
     "serverkey":  "auth/server.key",
 
     "vaultaddress":     "http://localhost:8200",
