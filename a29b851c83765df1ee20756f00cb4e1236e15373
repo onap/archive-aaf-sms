@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5a93c517_e2547200",
+        "filename": "sms-quorum/src/smsquorum/quorumclient.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 57,
+      "author": {
+        "id": 301
+      },
+      "writtenOn": "2018-02-26T22:24:21Z",
+      "side": 1,
+      "message": "Change URL to https://localhost:10443/v1/sms/status",
+      "range": {
+        "startLine": 57,
+        "startChar": 28,
+        "endLine": 57,
+        "endChar": 69
+      },
+      "revId": "a29b851c83765df1ee20756f00cb4e1236e15373",
+      "serverId": "14b4e41f-c4e3-4fb9-9955-6a9b5656895a",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5a93c517_4243e641",
+        "filename": "sms-quorum/src/smsquorum/quorumclient.go",
+        "patchSetId": 2
+      },
+      "lineNbr": 74,
+      "author": {
+        "id": 301
+      },
+      "writtenOn": "2018-02-26T22:24:21Z",
+      "side": 1,
+      "message": "Change URL to https://localhost:10443/v1/sms/unseal",
+      "range": {
+        "startLine": 74,
+        "startChar": 30,
+        "endLine": 74,
+        "endChar": 65
+      },
+      "revId": "a29b851c83765df1ee20756f00cb4e1236e15373",
+      "serverId": "14b4e41f-c4e3-4fb9-9955-6a9b5656895a",
+      "unresolved": false
+    }
+  ]
+}
