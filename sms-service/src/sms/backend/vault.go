@@ -70,7 +70,11 @@ func (v *Vault) Init() error {
 		return fmt.Errorf("Vault is still sealed. Unseal before use")
 	}
 
-	v.initRole()
+	err = v.initRole()
+	if err != nil {
+		log.Fatalln("Unable to initRole in Vault. Exiting...")
+	}
+
 	v.checkToken()
 	return nil
 }
@@ -228,7 +232,10 @@ func (v *Vault) initRole() error {
 
 	rules := `path "sms/*" { capabilities = ["create", "read", "update", "delete", "list"] }
 			path "sys/mounts/sms*" { capabilities = ["update","delete","create"] }`
-	v.vaultClient.Sys().PutPolicy(v.policyName, rules)
+	err := v.vaultClient.Sys().PutPolicy(v.policyName, rules)
+	if err != nil {
+		return errors.New("Unable to create policy for approle creation")
+	}
 
 	rName := v.vaultMount + "-role"
 	data := map[string]interface{}{
@@ -237,12 +244,15 @@ func (v *Vault) initRole() error {
 	}
 
 	// Delete role if it already exists
-	v.vaultClient.Logical().Delete("auth/approle/role/" + rName)
+	_, err = v.vaultClient.Logical().Delete("auth/approle/role/" + rName)
+	if err != nil {
+		return errors.New("Unable to delete existing role")
+	}
 
 	//Check if approle is mounted
 	authMounts, err := v.vaultClient.Sys().ListAuth()
 	if err != nil {
-		return err
+		return errors.New("Unable to get mounted auth backends")
 	}
 
 	approleMounted := false
@@ -262,13 +272,17 @@ func (v *Vault) initRole() error {
 	v.vaultClient.Logical().Write("auth/approle/role/"+rName, data)
 	sec, err := v.vaultClient.Logical().Read("auth/approle/role/" + rName + "/role-id")
 	if err != nil {
-		log.Fatal(err)
+		return errors.New("Unable to create role ID for approle")
 	}
 	v.roleID = sec.Data["role_id"].(string)
 
 	// Create a secret-id to go with it
-	sec, _ = v.vaultClient.Logical().Write("auth/approle/role/"+rName+"/secret-id",
+	sec, err = v.vaultClient.Logical().Write("auth/approle/role/"+rName+"/secret-id",
 		map[string]interface{}{})
+	if err != nil {
+		return errors.New("Unable to create secret ID for role")
+	}
+
 	v.secretID = sec.Data["secret_id"].(string)
 
 	return nil
