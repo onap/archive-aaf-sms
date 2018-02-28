@@ -1,0 +1,142 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5a93c517_94292839",
+        "filename": "sms-service/bin/Dockerfile",
+        "patchSetId": 1
+      },
+      "lineNbr": 11,
+      "author": {
+        "id": 301
+      },
+      "writtenOn": "2018-02-28T00:57:24Z",
+      "side": 1,
+      "message": "remove trailing white spaces",
+      "range": {
+        "startLine": 11,
+        "startChar": 60,
+        "endLine": 11,
+        "endChar": 61
+      },
+      "revId": "4dcafc7646969759d96c892ea9eb39d399a5db4e",
+      "serverId": "14b4e41f-c4e3-4fb9-9955-6a9b5656895a",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5a93c517_541f2008",
+        "filename": "sms-service/bin/Dockerfile",
+        "patchSetId": 1
+      },
+      "lineNbr": 12,
+      "author": {
+        "id": 301
+      },
+      "writtenOn": "2018-02-28T00:57:24Z",
+      "side": 1,
+      "message": "same as above",
+      "range": {
+        "startLine": 12,
+        "startChar": 124,
+        "endLine": 12,
+        "endChar": 125
+      },
+      "revId": "4dcafc7646969759d96c892ea9eb39d399a5db4e",
+      "serverId": "14b4e41f-c4e3-4fb9-9955-6a9b5656895a",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5a93c517_141518e4",
+        "filename": "sms-service/bin/Dockerfile",
+        "patchSetId": 1
+      },
+      "lineNbr": 13,
+      "author": {
+        "id": 301
+      },
+      "writtenOn": "2018-02-28T00:57:24Z",
+      "side": 1,
+      "message": "same as above",
+      "range": {
+        "startLine": 13,
+        "startChar": 34,
+        "endLine": 13,
+        "endChar": 35
+      },
+      "revId": "4dcafc7646969759d96c892ea9eb39d399a5db4e",
+      "serverId": "14b4e41f-c4e3-4fb9-9955-6a9b5656895a",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5a93c517_b4d5441d",
+        "filename": "sms-service/bin/Dockerfile",
+        "patchSetId": 1
+      },
+      "lineNbr": 14,
+      "author": {
+        "id": 301
+      },
+      "writtenOn": "2018-02-28T00:57:24Z",
+      "side": 1,
+      "message": "same as above",
+      "range": {
+        "startLine": 14,
+        "startChar": 26,
+        "endLine": 14,
+        "endChar": 27
+      },
+      "revId": "4dcafc7646969759d96c892ea9eb39d399a5db4e",
+      "serverId": "14b4e41f-c4e3-4fb9-9955-6a9b5656895a",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5a93c517_d4da504b",
+        "filename": "sms-service/bin/Dockerfile",
+        "patchSetId": 1
+      },
+      "lineNbr": 15,
+      "author": {
+        "id": 301
+      },
+      "writtenOn": "2018-02-28T00:57:24Z",
+      "side": 1,
+      "message": "same as above",
+      "range": {
+        "startLine": 15,
+        "startChar": 35,
+        "endLine": 15,
+        "endChar": 36
+      },
+      "revId": "4dcafc7646969759d96c892ea9eb39d399a5db4e",
+      "serverId": "14b4e41f-c4e3-4fb9-9955-6a9b5656895a",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5a93c517_b42ea441",
+        "filename": "sms-service/bin/Dockerfile",
+        "patchSetId": 1
+      },
+      "lineNbr": 25,
+      "author": {
+        "id": 301
+      },
+      "writtenOn": "2018-02-28T00:57:24Z",
+      "side": 1,
+      "message": "This should be some other port number like 10443 as we are not exposing the vault port outside.",
+      "range": {
+        "startLine": 25,
+        "startChar": 0,
+        "endLine": 25,
+        "endChar": 11
+      },
+      "revId": "4dcafc7646969759d96c892ea9eb39d399a5db4e",
+      "serverId": "14b4e41f-c4e3-4fb9-9955-6a9b5656895a",
+      "unresolved": false
+    }
+  ]
+}
