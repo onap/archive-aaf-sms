@@ -18,7 +18,6 @@ package handler
 
 import (
 	"encoding/json"
-	"fmt"
 	"github.com/gorilla/mux"
 	"net/http"
 
@@ -38,31 +37,21 @@ func (h handler) createSecretDomainHandler(w http.ResponseWriter, r *http.Reques
 
 	err := json.NewDecoder(r.Body).Decode(&d)
 	if err != nil {
-		http.Error(w, err.Error(), 400)
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
 	dom, err := h.secretBackend.CreateSecretDomain(d.Name)
 	if err != nil {
-		http.Error(w, err.Error(), 500)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
 	err = json.NewEncoder(w).Encode(dom)
 	if err != nil {
-		http.Error(w, err.Error(), 400)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-}
-
-// getSecretDomainHandler returns list of secret domains
-func (h handler) getSecretDomainHandler(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	domName := vars["domName"]
-
-	fmt.Fprintf(w, "Got req %s", domName)
-	//h.secretBackend.GetSecretDomain(domName)
-	//encode data into json and return
 }
 
 // deleteSecretDomainHandler deletes a secret domain with the name provided
@@ -87,13 +76,13 @@ func (h handler) createSecretHandler(w http.ResponseWriter, r *http.Request) {
 	var b smsbackend.Secret
 	err := json.NewDecoder(r.Body).Decode(&b)
 	if err != nil {
-		http.Error(w, err.Error(), 400)
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
 	err = h.secretBackend.CreateSecret(domName, b)
 	if err != nil {
-		http.Error(w, err.Error(), 500)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
@@ -108,13 +97,13 @@ func (h handler) getSecretHandler(w http.ResponseWriter, r *http.Request) {
 
 	sec, err := h.secretBackend.GetSecret(domName, secName)
 	if err != nil {
-		http.Error(w, err.Error(), 500)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
 	err = json.NewEncoder(w).Encode(sec)
 	if err != nil {
-		http.Error(w, err.Error(), 400)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 }
@@ -159,14 +148,14 @@ type backendStatus struct {
 func (h handler) statusHandler(w http.ResponseWriter, r *http.Request) {
 	s, err := h.secretBackend.GetStatus()
 	if err != nil {
-		http.Error(w, err.Error(), 500)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
 	status := backendStatus{Seal: s}
 	err = json.NewEncoder(w).Encode(status)
 	if err != nil {
-		http.Error(w, err.Error(), 500)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 }
@@ -203,7 +192,6 @@ func CreateRouter(b smsbackend.SecretBackend) http.Handler {
 	router.HandleFunc("/v1/sms/init", h.initSMSHandler).Methods("POST")
 
 	router.HandleFunc("/v1/sms/domain", h.createSecretDomainHandler).Methods("POST")
-	router.HandleFunc("/v1/sms/domain/{domName}", h.getSecretDomainHandler).Methods("GET")
 	router.HandleFunc("/v1/sms/domain/{domName}", h.deleteSecretDomainHandler).Methods("DELETE")
 
 	router.HandleFunc("/v1/sms/domain/{domName}/secret", h.createSecretHandler).Methods("POST")
