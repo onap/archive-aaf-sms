@@ -48,6 +48,30 @@
     },
     {
       "key": {
+        "uuid": "5a93c517_c5561206",
+        "filename": "sms-service/bin/Dockerfile",
+        "patchSetId": 1
+      },
+      "lineNbr": 12,
+      "author": {
+        "id": 3087
+      },
+      "writtenOn": "2018-03-01T18:54:47Z",
+      "side": 1,
+      "message": "This package needs to be verified since it is coming in externally.",
+      "parentUuid": "5a93c517_541f2008",
+      "range": {
+        "startLine": 12,
+        "startChar": 124,
+        "endLine": 12,
+        "endChar": 125
+      },
+      "revId": "4dcafc7646969759d96c892ea9eb39d399a5db4e",
+      "serverId": "14b4e41f-c4e3-4fb9-9955-6a9b5656895a",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "5a93c517_141518e4",
         "filename": "sms-service/bin/Dockerfile",
         "patchSetId": 1
@@ -111,6 +135,23 @@
         "endLine": 15,
         "endChar": 36
       },
+      "revId": "4dcafc7646969759d96c892ea9eb39d399a5db4e",
+      "serverId": "14b4e41f-c4e3-4fb9-9955-6a9b5656895a",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5a93c517_e559ce35",
+        "filename": "sms-service/bin/Dockerfile",
+        "patchSetId": 1
+      },
+      "lineNbr": 18,
+      "author": {
+        "id": 3087
+      },
+      "writtenOn": "2018-03-01T18:54:47Z",
+      "side": 1,
+      "message": "same as above - needs to be verified",
       "revId": "4dcafc7646969759d96c892ea9eb39d399a5db4e",
       "serverId": "14b4e41f-c4e3-4fb9-9955-6a9b5656895a",
       "unresolved": false
