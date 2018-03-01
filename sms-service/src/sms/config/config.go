@@ -43,6 +43,7 @@ func ReadConfigFile(file string) (*SMSConfiguration, error) {
 		if err != nil {
 			return nil, err
 		}
+		defer f.Close()
 
 		SMSConfig = &SMSConfiguration{}
 		decoder := json.NewDecoder(f)

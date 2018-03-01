@@ -18,6 +18,7 @@ package backend
 
 import (
 	smsconfig "sms/config"
+	smslogger "sms/log"
 )
 
 // SecretDomain is where Secrets are stored.
@@ -66,6 +67,7 @@ func InitSecretBackend() (SecretBackend, error) {
 
 	err := backendImpl.Init()
 	if err != nil {
+		smslogger.WriteError(err.Error())
 		return nil, err
 	}
 
