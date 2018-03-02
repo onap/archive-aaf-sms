@@ -46,9 +46,7 @@ type SecretBackend interface {
 	Init() error
 
 	GetStatus() (bool, error)
-	GetSecretDomain(name string) (SecretDomain, error)
 	GetSecret(dom string, sec string) (Secret, error)
-
 	ListSecret(dom string) ([]string, error)
 
 	CreateSecretDomain(name string) (SecretDomain, error)

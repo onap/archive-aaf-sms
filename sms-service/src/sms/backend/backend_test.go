@@ -28,10 +28,10 @@ func TestInitSecretBackend(t *testing.T) {
 	sec, err := InitSecretBackend()
 	// We expect an error to be returned as Init expects
 	// backend to be running
-	if err == nil {
-		t.Fatal("InitSecretBackend : error creating")
+	if err != nil {
+		t.Fatal("InitSecretBackend : Expected nil as Init is independent of Vault")
 	}
-	if sec != nil {
-		t.Fatal("InitSecretBackend: returned SecretBackend was *NOT* nil, expected nil")
+	if sec == nil {
+		t.Fatal("InitSecretBackend: returned SecretBackend was nil")
 	}
 }

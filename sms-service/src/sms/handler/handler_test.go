@@ -42,10 +42,6 @@ func (b *TestBackend) GetStatus() (bool, error) {
 	return true, nil
 }
 
-func (b *TestBackend) GetSecretDomain(name string) (smsbackend.SecretDomain, error) {
-	return smsbackend.SecretDomain{}, nil
-}
-
 func (b *TestBackend) GetSecret(dom string, sec string) (smsbackend.Secret, error) {
 	return smsbackend.Secret{}, nil
 }
