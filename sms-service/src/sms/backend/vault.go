@@ -30,19 +30,17 @@ import (
 
 // Vault is the main Struct used in Backend to initialize the struct
 type Vault struct {
-	vaultAddress   string
-	vaultToken     string
-	vaultMount     string
-	vaultTempToken string
-
-	vaultClient       *vaultapi.Client
 	engineType        string
+	initRoleDone      bool
 	policyName        string
 	roleID            string
 	secretID          string
+	tokenLock         sync.Mutex
+	vaultAddress      string
+	vaultClient       *vaultapi.Client
+	vaultMount        string
 	vaultTempTokenTTL time.Time
-
-	tokenLock sync.Mutex
+	vaultToken        string
 }
 
 // Init will initialize the vault connection
@@ -57,25 +55,19 @@ func (v *Vault) Init() error {
 	}
 
 	v.engineType = "kv"
+	v.initRoleDone = false
 	v.policyName = "smsvaultpolicy"
-	v.vaultMount = "sms"
 	v.vaultClient = client
+	v.vaultMount = "sms"
 
 	// Check if vault is ready and unsealed
-	seal, err := v.GetStatus()
-	if err != nil {
-		return err
-	}
-	if seal == true {
-		return fmt.Errorf("Vault is still sealed. Unseal before use")
-	}
-
+	//ch := make(chan bool)
+	//go v.waitForUnseal(ch)
 	err = v.initRole()
 	if err != nil {
-		log.Fatalln("Unable to initRole in Vault. Exiting...")
+		//print error message and try to initrole later
 	}
 
-	v.checkToken()
 	return nil
 }
 
@@ -88,12 +80,6 @@ func (v *Vault) GetStatus() (bool, error) {
 	}
 
 	return sealStatus.Sealed, nil
-}
-
-// GetSecretDomain returns any information related to the secretDomain
-// More information can be added in the future with updates to the struct
-func (v *Vault) GetSecretDomain(name string) (SecretDomain, error) {
-	return SecretDomain{}, nil
 }
 
 // GetSecret returns a secret mounted on a particular domain name
@@ -191,6 +177,7 @@ func (v *Vault) CreateSecret(dom string, sec Secret) error {
 	dom = v.vaultMount + "/" + dom
 
 	// Vault return is empty on successful write
+	// TODO: Check if values is not empty
 	_, err = v.vaultClient.Logical().Write(dom+"/"+sec.Name, sec.Values)
 	if err != nil {
 		return errors.New("Unable to create Secret at provided path")
@@ -255,13 +242,7 @@ func (v *Vault) initRole() error {
 		"policies":  [2]string{"default", v.policyName},
 	}
 
-	// Delete role if it already exists
-	_, err = v.vaultClient.Logical().Delete("auth/approle/role/" + rName)
-	if err != nil {
-		return errors.New("Unable to delete existing role")
-	}
-
-	//Check if approle is mounted
+	//Check if applrole is mounted
 	authMounts, err := v.vaultClient.Sys().ListAuth()
 	if err != nil {
 		return errors.New("Unable to get mounted auth backends")
@@ -296,7 +277,7 @@ func (v *Vault) initRole() error {
 	}
 
 	v.secretID = sec.Data["secret_id"].(string)
-
+	v.initRoleDone = true
 	return nil
 }
 
@@ -305,6 +286,14 @@ func (v *Vault) initRole() error {
 func (v *Vault) checkToken() error {
 	v.tokenLock.Lock()
 	defer v.tokenLock.Unlock()
+
+	// Init Role if it is not yet done
+	if v.initRoleDone == false {
+		err := v.initRole()
+		if err != nil {
+			return err
+		}
+	}
 
 	// Return immediately if token still has life
 	if v.vaultClient.Token() != "" &&
@@ -321,8 +310,7 @@ func (v *Vault) checkToken() error {
 
 	tok, err := out.TokenID()
 
-	v.vaultTempToken = tok
 	v.vaultTempTokenTTL = time.Now()
-	v.vaultClient.SetToken(v.vaultTempToken)
+	v.vaultClient.SetToken(tok)
 	return nil
 }
