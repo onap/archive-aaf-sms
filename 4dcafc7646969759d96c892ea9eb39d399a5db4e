@@ -2,6 +2,29 @@
   "comments": [
     {
       "key": {
+        "uuid": "5a93c517_5402b2b4",
+        "filename": "sms-service/bin/Dockerfile",
+        "patchSetId": 1
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 301
+      },
+      "writtenOn": "2018-03-03T00:42:48Z",
+      "side": 1,
+      "message": "Can we move this to 3.7?\n3.5 is too old.",
+      "range": {
+        "startLine": 1,
+        "startChar": 12,
+        "endLine": 1,
+        "endChar": 15
+      },
+      "revId": "4dcafc7646969759d96c892ea9eb39d399a5db4e",
+      "serverId": "14b4e41f-c4e3-4fb9-9955-6a9b5656895a",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "5a93c517_94292839",
         "filename": "sms-service/bin/Dockerfile",
         "patchSetId": 1
@@ -65,6 +88,29 @@
         "startChar": 124,
         "endLine": 12,
         "endChar": 125
+      },
+      "revId": "4dcafc7646969759d96c892ea9eb39d399a5db4e",
+      "serverId": "14b4e41f-c4e3-4fb9-9955-6a9b5656895a",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5a93c517_1430aa9d",
+        "filename": "sms-service/bin/Dockerfile",
+        "patchSetId": 1
+      },
+      "lineNbr": 12,
+      "author": {
+        "id": 301
+      },
+      "writtenOn": "2018-03-03T00:42:48Z",
+      "side": 1,
+      "message": "Instead of doing wget. Can we use ADD docker command?",
+      "range": {
+        "startLine": 12,
+        "startChar": 1,
+        "endLine": 12,
+        "endChar": 119
       },
       "revId": "4dcafc7646969759d96c892ea9eb39d399a5db4e",
       "serverId": "14b4e41f-c4e3-4fb9-9955-6a9b5656895a",
@@ -152,6 +198,29 @@
       "writtenOn": "2018-03-01T18:54:47Z",
       "side": 1,
       "message": "same as above - needs to be verified",
+      "revId": "4dcafc7646969759d96c892ea9eb39d399a5db4e",
+      "serverId": "14b4e41f-c4e3-4fb9-9955-6a9b5656895a",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5a93c517_343366ac",
+        "filename": "sms-service/bin/Dockerfile",
+        "patchSetId": 1
+      },
+      "lineNbr": 18,
+      "author": {
+        "id": 301
+      },
+      "writtenOn": "2018-03-03T00:42:48Z",
+      "side": 1,
+      "message": "Instead of using WGET here, can we use ADD docker command again.",
+      "range": {
+        "startLine": 18,
+        "startChar": 1,
+        "endLine": 18,
+        "endChar": 124
+      },
       "revId": "4dcafc7646969759d96c892ea9eb39d399a5db4e",
       "serverId": "14b4e41f-c4e3-4fb9-9955-6a9b5656895a",
       "unresolved": false
