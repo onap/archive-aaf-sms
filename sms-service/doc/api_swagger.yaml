@@ -8,9 +8,11 @@ info:
   license:
     name: Apache 2.0
     url: 'http://www.apache.org/licenses/LICENSE-2.0.html'
-host: 'aaf.onap.org:8000'
+host: 'aaf.onap.org:10443'
 basePath: /v1/sms/
 tags:
+  - name: system
+    description: Operations related to quorum client which are not useful to clients
   - name: login
     description: Operations related to username password based authentication
   - name: domain
@@ -24,9 +26,8 @@ paths:
     post:
       tags:
         - login
-      summary: "Login with username and password"
-      description: 'Operations related to logging in via username and Password'
-      operationId: loginUser
+      summary: Login with username and password
+      description: Operations related to logging in via username and Password
       consumes:
         - application/json
       produces:
@@ -39,18 +40,67 @@ paths:
             $ref: '#/definitions/Credential'
       responses:
         '200':
-          description: "Successful Login"
+          description: Successful Login returns a token
           schema:
-            type: "string"
+            type: object
+            properties:
+              token:
+                type: string
+              ttl:
+                type: integer
+                description: ttl of returned token in seconds
         '404':
-          description: "Invalid Username or Password"
+          description: Invalid Username or Password
+  /status:
+    get:
+      tags:
+        - system
+      description: Gets current backend status. This API is used only by quorum clients
+      summary: Get backend status
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: Successful operation
+          schema:
+            type: object
+            properties:
+              sealstatus:
+                type: string
+                description: seal status of backend
+        '404':
+          description: Invalid Path or Path not found
+  /unseal:
+    post:
+      tags:
+        - system
+      description: Sends unseal shard to unseal if backend is sealed
+      summary: Unseal backend
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - in: body
+          name: body
+          required: true
+          schema:
+            type: object
+            properties:
+              unsealshard:
+                type: string
+                description: Unseal shard that will be used along with other shards to unseal backend
+      responses:
+        '201':
+          description: Submitted unseal key
+        '404':
+          description: Invalid Path or Path not found          
   /domain:
     post:
       tags:
         - domain
       summary: Add a new domain
       description: ''
-      operationId: addDomain
       consumes:
         - application/json
       produces:
@@ -62,38 +112,20 @@ paths:
           schema:
             $ref: '#/definitions/Domain'
       responses:
-        '200':
+        '201':
           description: Successful Creation
           schema:
             $ref: '#/definitions/Domain'
-        '405':
+        '400':
           description: Invalid input
+        '500':
+          description: Internal Server Error
   '/domain/{domainName}':
-    get:
-      tags:
-        - domain
-      description: Gets domain information by name
-      operationId: getDomainByName
-      produces:
-        - application/json
-      parameters:
-        - name: domainName
-          in: path
-          description: Name of the domain
-          required: true
-          type: string
-      responses:
-        '200':
-          description: successful operation
-          schema:
-            $ref: '#/definitions/Domain'
-        '404':
-          description: Invalid Path or Path not found
     delete:
       tags:
         - domain
       description: Deletes a domain with provided name
-      operationId: deleteDomainByName
+      summary: Deletes a domain by name
       produces:
         - application/json
       parameters:
@@ -113,7 +145,6 @@ paths:
         - secret
       summary: Add a new secret
       description: ''
-      operationId: addSecretInDomain
       consumes:
         - application/json
       produces:
@@ -130,17 +161,15 @@ paths:
           schema:
             $ref: '#/definitions/Secret'
       responses:
-        '200':
+        '201':
           description: Successful Creation
-          schema:
-            $ref: '#/definitions/Secret'
         '404':
           description: Invalid Path or Path not found
     get:
       tags:
         - secret
-      description: Gets all secrets in this domain
-      operationId: getAllSecretsInDomain
+      description: Gets all secret names in this domain
+      summary: List secret Names in this domain
       produces:
         - application/json
       parameters:
@@ -151,11 +180,12 @@ paths:
           type: string
       responses:
         '200':
-          description: successful operation
+          description: Successful operation
           schema:
-            type: "array"
+            type: array
             items:
-              $ref: '#/definitions/Secret'
+              type: string 
+            example: ['secret1', 'secret2', 'secret3']
         '404':
           description: Invalid Path or Path not found
   '/domain/{domainName}/secret/{secretName}':
@@ -164,7 +194,6 @@ paths:
         - secret
       summary: Find Secret by Name
       description: Returns a single secret
-      operationId: getSecretByName
       produces:
         - application/json
       parameters:
@@ -190,7 +219,6 @@ paths:
         - secret
       summary: Deletes a Secret
       description: ''
-      operationId: deleteSecret
       produces:
         - application/json
       parameters:
@@ -209,14 +237,19 @@ paths:
           description: Successful Deletion
         '404':
           description: Invalid Path or Path not found
+securityDefinitions:
+  token:
+    type: "apiKey"
+    name: "token"
+    in: "header"
 definitions:
   Credential:
     type: object
     properties:
       username:
-        type: "string"
+        type: string
       password:
-        type: "string"
+        type: string
   Domain:
     type: object
     properties:
@@ -229,21 +262,20 @@ definitions:
         type: string
         description: Name of the secret domain under which all secrets will be stored
   Secret:
-    type: "object"
+    type: object
     properties:
       name:
-        type: "string"
+        type: string
         description: Name of the secret
-      value:
-        type: "array"
-        description: Array of key value pairs that constitute the secret
-        items:
-          type: "object"
-          properties:
-            key:
-              type: "string"
-            value:
-              type: "string"
+      values:
+        description: Map of key value pairs that constitute the secret
+        type: object
+        additionalProperties:
+          type: object
+        example:
+          "name": "john"
+          "Age": 40
+          "admin": true
 externalDocs:
   description: Find out more about Swagger
   url: 'http://swagger.io'

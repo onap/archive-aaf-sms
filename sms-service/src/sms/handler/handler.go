@@ -52,6 +52,8 @@ func (h handler) createSecretDomainHandler(w http.ResponseWriter, r *http.Reques
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+
+	w.WriteHeader(http.StatusCreated)
 }
 
 // deleteSecretDomainHandler deletes a secret domain with the name provided
@@ -64,6 +66,8 @@ func (h handler) deleteSecretDomainHandler(w http.ResponseWriter, r *http.Reques
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+
+	w.WriteHeader(http.StatusNoContent)
 }
 
 // createSecretHandler handles creation of secrets on a given domain name
