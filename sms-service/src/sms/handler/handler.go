@@ -22,6 +22,7 @@ import (
 	"net/http"
 
 	smsbackend "sms/backend"
+	smslogger "sms/log"
 )
 
 // handler stores two interface implementations that implement
@@ -37,18 +38,21 @@ func (h handler) createSecretDomainHandler(w http.ResponseWriter, r *http.Reques
 
 	err := json.NewDecoder(r.Body).Decode(&d)
 	if err != nil {
+		smslogger.WriteError(err.Error())
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
 	dom, err := h.secretBackend.CreateSecretDomain(d.Name)
 	if err != nil {
+		smslogger.WriteError(err.Error())
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
 	err = json.NewEncoder(w).Encode(dom)
 	if err != nil {
+		smslogger.WriteError(err.Error())
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -63,6 +67,7 @@ func (h handler) deleteSecretDomainHandler(w http.ResponseWriter, r *http.Reques
 
 	err := h.secretBackend.DeleteSecretDomain(domName)
 	if err != nil {
+		smslogger.WriteError(err.Error())
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -80,12 +85,14 @@ func (h handler) createSecretHandler(w http.ResponseWriter, r *http.Request) {
 	var b smsbackend.Secret
 	err := json.NewDecoder(r.Body).Decode(&b)
 	if err != nil {
+		smslogger.WriteError(err.Error())
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
 	err = h.secretBackend.CreateSecret(domName, b)
 	if err != nil {
+		smslogger.WriteError(err.Error())
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -101,12 +108,14 @@ func (h handler) getSecretHandler(w http.ResponseWriter, r *http.Request) {
 
 	sec, err := h.secretBackend.GetSecret(domName, secName)
 	if err != nil {
+		smslogger.WriteError(err.Error())
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
 	err = json.NewEncoder(w).Encode(sec)
 	if err != nil {
+		smslogger.WriteError(err.Error())
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -119,12 +128,14 @@ func (h handler) listSecretHandler(w http.ResponseWriter, r *http.Request) {
 
 	sec, err := h.secretBackend.ListSecret(domName)
 	if err != nil {
+		smslogger.WriteError(err.Error())
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
 	err = json.NewEncoder(w).Encode(sec)
 	if err != nil {
+		smslogger.WriteError(err.Error())
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -138,6 +149,7 @@ func (h handler) deleteSecretHandler(w http.ResponseWriter, r *http.Request) {
 
 	err := h.secretBackend.DeleteSecret(domName, secName)
 	if err != nil {
+		smslogger.WriteError(err.Error())
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -152,6 +164,7 @@ type backendStatus struct {
 func (h handler) statusHandler(w http.ResponseWriter, r *http.Request) {
 	s, err := h.secretBackend.GetStatus()
 	if err != nil {
+		smslogger.WriteError(err.Error())
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -159,6 +172,7 @@ func (h handler) statusHandler(w http.ResponseWriter, r *http.Request) {
 	status := backendStatus{Seal: s}
 	err = json.NewEncoder(w).Encode(status)
 	if err != nil {
+		smslogger.WriteError(err.Error())
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -182,12 +196,14 @@ func (h handler) unsealHandler(w http.ResponseWriter, r *http.Request) {
 	decoder.DisallowUnknownFields()
 	err := decoder.Decode(&inp)
 	if err != nil {
+		smslogger.WriteError(err.Error())
 		http.Error(w, "Bad input JSON", http.StatusBadRequest)
 		return
 	}
 
 	err = h.secretBackend.Unseal(inp.UnsealShard)
 	if err != nil {
+		smslogger.WriteError(err.Error())
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
