@@ -78,6 +78,18 @@ func (v *Vault) GetStatus() (bool, error) {
 	return sealStatus.Sealed, nil
 }
 
+// Unseal is a passthrough API that allows any
+// unseal or initialization processes for the backend
+func (v *Vault) Unseal(shard string) error {
+	sys := v.vaultClient.Sys()
+	_, err := sys.Unseal(shard)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 // GetSecret returns a secret mounted on a particular domain name
 // The secret itself is referenced via its name which translates to
 // a mount path in vault
@@ -284,6 +296,7 @@ func (v *Vault) checkToken() error {
 	defer v.tokenLock.Unlock()
 
 	// Init Role if it is not yet done
+	// Role needs to be created before token can be created
 	if v.initRoleDone == false {
 		err := v.initRole()
 		if err != nil {

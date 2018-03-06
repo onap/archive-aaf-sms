@@ -165,14 +165,28 @@ func (h handler) loginHandler(w http.ResponseWriter, r *http.Request) {
 
 }
 
-// initSMSHandler
-func (h handler) initSMSHandler(w http.ResponseWriter, r *http.Request) {
-
-}
-
-// unsealHandler
+// unsealHandler is a pass through that sends requests from quorum client
+// to the backend.
 func (h handler) unsealHandler(w http.ResponseWriter, r *http.Request) {
+	// Get shards to be used for unseal
+	type unsealStruct struct {
+		UnsealShard string `json:"unsealshard"`
+	}
 
+	var inp unsealStruct
+	decoder := json.NewDecoder(r.Body)
+	decoder.DisallowUnknownFields()
+	err := decoder.Decode(&inp)
+	if err != nil {
+		http.Error(w, "Bad input JSON", http.StatusBadRequest)
+		return
+	}
+
+	err = h.secretBackend.Unseal(inp.UnsealShard)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 }
 
 // CreateRouter returns an http.Handler for the registered URLs
@@ -189,7 +203,6 @@ func CreateRouter(b smsbackend.SecretBackend) http.Handler {
 	// to unseal and to provide root token to sms service
 	router.HandleFunc("/v1/sms/status", h.statusHandler).Methods("GET")
 	router.HandleFunc("/v1/sms/unseal", h.unsealHandler).Methods("POST")
-	router.HandleFunc("/v1/sms/init", h.initSMSHandler).Methods("POST")
 
 	router.HandleFunc("/v1/sms/domain", h.createSecretDomainHandler).Methods("POST")
 	router.HandleFunc("/v1/sms/domain/{domName}", h.deleteSecretDomainHandler).Methods("DELETE")
