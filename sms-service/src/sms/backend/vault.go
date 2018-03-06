@@ -19,6 +19,7 @@ package backend
 import (
 	uuid "github.com/hashicorp/go-uuid"
 	vaultapi "github.com/hashicorp/vault/api"
+	smslogger "sms/log"
 
 	"errors"
 	"fmt"
@@ -50,7 +51,8 @@ func (v *Vault) Init() error {
 	vaultCFG.Address = v.vaultAddress
 	client, err := vaultapi.NewClient(vaultCFG)
 	if err != nil {
-		return err
+		smslogger.WriteError(err.Error())
+		return errors.New("Unable to create new vault client")
 	}
 
 	v.engineType = "kv"
@@ -61,7 +63,8 @@ func (v *Vault) Init() error {
 
 	err = v.initRole()
 	if err != nil {
-		//print error message and try to initrole later
+		smslogger.WriteError(err.Error())
+		smslogger.WriteInfo("InitRole will try again later")
 	}
 
 	return nil
@@ -72,7 +75,8 @@ func (v *Vault) GetStatus() (bool, error) {
 	sys := v.vaultClient.Sys()
 	sealStatus, err := sys.SealStatus()
 	if err != nil {
-		return false, err
+		smslogger.WriteError(err.Error())
+		return false, errors.New("Error getting status")
 	}
 
 	return sealStatus.Sealed, nil
@@ -84,7 +88,8 @@ func (v *Vault) Unseal(shard string) error {
 	sys := v.vaultClient.Sys()
 	_, err := sys.Unseal(shard)
 	if err != nil {
-		return err
+		smslogger.WriteError(err.Error())
+		return errors.New("Unable to execute unseal operation with specified shard")
 	}
 
 	return nil
@@ -96,18 +101,21 @@ func (v *Vault) Unseal(shard string) error {
 func (v *Vault) GetSecret(dom string, name string) (Secret, error) {
 	err := v.checkToken()
 	if err != nil {
-		return Secret{}, errors.New("Token check returned error: " + err.Error())
+		smslogger.WriteError(err.Error())
+		return Secret{}, errors.New("Token check failed")
 	}
 
 	dom = v.vaultMount + "/" + dom
 
 	sec, err := v.vaultClient.Logical().Read(dom + "/" + name)
 	if err != nil {
+		smslogger.WriteError(err.Error())
 		return Secret{}, errors.New("Unable to read Secret at provided path")
 	}
 
 	// sec and err are nil in the case where a path does not exist
 	if sec == nil {
+		smslogger.WriteWarn("Vault read was empty. Invalid Path")
 		return Secret{}, errors.New("Secret not found at the provided path")
 	}
 
@@ -119,23 +127,27 @@ func (v *Vault) GetSecret(dom string, name string) (Secret, error) {
 func (v *Vault) ListSecret(dom string) ([]string, error) {
 	err := v.checkToken()
 	if err != nil {
-		return nil, errors.New("Token check returned error: " + err.Error())
+		smslogger.WriteError(err.Error())
+		return nil, errors.New("Token check failed")
 	}
 
 	dom = v.vaultMount + "/" + dom
 
 	sec, err := v.vaultClient.Logical().List(dom)
 	if err != nil {
+		smslogger.WriteError(err.Error())
 		return nil, errors.New("Unable to read Secret at provided path")
 	}
 
 	// sec and err are nil in the case where a path does not exist
 	if sec == nil {
+		smslogger.WriteWarn("Vaultclient returned empty data")
 		return nil, errors.New("Secret not found at the provided path")
 	}
 
 	val, ok := sec.Data["keys"].([]interface{})
 	if !ok {
+		smslogger.WriteError("Secret not found at the provided path")
 		return nil, errors.New("Secret not found at the provided path")
 	}
 
@@ -152,7 +164,8 @@ func (v *Vault) CreateSecretDomain(name string) (SecretDomain, error) {
 	// Check if token is still valid
 	err := v.checkToken()
 	if err != nil {
-		return SecretDomain{}, err
+		smslogger.WriteError(err.Error())
+		return SecretDomain{}, errors.New("Token Check failed")
 	}
 
 	name = strings.TrimSpace(name)
@@ -167,7 +180,8 @@ func (v *Vault) CreateSecretDomain(name string) (SecretDomain, error) {
 
 	err = v.vaultClient.Sys().Mount(mountPath, mountInput)
 	if err != nil {
-		return SecretDomain{}, err
+		smslogger.WriteError(err.Error())
+		return SecretDomain{}, errors.New("Unable to create Secret Domain")
 	}
 
 	uuid, _ := uuid.GenerateUUID()
@@ -179,7 +193,8 @@ func (v *Vault) CreateSecretDomain(name string) (SecretDomain, error) {
 func (v *Vault) CreateSecret(dom string, sec Secret) error {
 	err := v.checkToken()
 	if err != nil {
-		return errors.New("Token checking returned an error" + err.Error())
+		smslogger.WriteError(err.Error())
+		return errors.New("Token check failed")
 	}
 
 	dom = v.vaultMount + "/" + dom
@@ -188,6 +203,7 @@ func (v *Vault) CreateSecret(dom string, sec Secret) error {
 	// TODO: Check if values is not empty
 	_, err = v.vaultClient.Logical().Write(dom+"/"+sec.Name, sec.Values)
 	if err != nil {
+		smslogger.WriteError(err.Error())
 		return errors.New("Unable to create Secret at provided path")
 	}
 
@@ -199,7 +215,8 @@ func (v *Vault) CreateSecret(dom string, sec Secret) error {
 func (v *Vault) DeleteSecretDomain(name string) error {
 	err := v.checkToken()
 	if err != nil {
-		return err
+		smslogger.WriteError(err.Error())
+		return errors.New("Token Check Failed")
 	}
 
 	name = strings.TrimSpace(name)
@@ -207,6 +224,7 @@ func (v *Vault) DeleteSecretDomain(name string) error {
 
 	err = v.vaultClient.Sys().Unmount(mountPath)
 	if err != nil {
+		smslogger.WriteError(err.Error())
 		return errors.New("Unable to delete domain specified")
 	}
 
@@ -217,7 +235,8 @@ func (v *Vault) DeleteSecretDomain(name string) error {
 func (v *Vault) DeleteSecret(dom string, name string) error {
 	err := v.checkToken()
 	if err != nil {
-		return errors.New("Token checking returned an error" + err.Error())
+		smslogger.WriteError(err.Error())
+		return errors.New("Token check failed")
 	}
 
 	dom = v.vaultMount + "/" + dom
@@ -225,6 +244,7 @@ func (v *Vault) DeleteSecret(dom string, name string) error {
 	// Vault return is empty on successful delete
 	_, err = v.vaultClient.Logical().Delete(dom + "/" + name)
 	if err != nil {
+		smslogger.WriteError(err.Error())
 		return errors.New("Unable to delete Secret at provided path")
 	}
 
@@ -241,6 +261,7 @@ func (v *Vault) initRole() error {
 			path "sys/mounts/sms*" { capabilities = ["update","delete","create"] }`
 	err := v.vaultClient.Sys().PutPolicy(v.policyName, rules)
 	if err != nil {
+		smslogger.WriteError(err.Error())
 		return errors.New("Unable to create policy for approle creation")
 	}
 
@@ -253,6 +274,7 @@ func (v *Vault) initRole() error {
 	//Check if applrole is mounted
 	authMounts, err := v.vaultClient.Sys().ListAuth()
 	if err != nil {
+		smslogger.WriteError(err.Error())
 		return errors.New("Unable to get mounted auth backends")
 	}
 
@@ -273,6 +295,7 @@ func (v *Vault) initRole() error {
 	v.vaultClient.Logical().Write("auth/approle/role/"+rName, data)
 	sec, err := v.vaultClient.Logical().Read("auth/approle/role/" + rName + "/role-id")
 	if err != nil {
+		smslogger.WriteError(err.Error())
 		return errors.New("Unable to create role ID for approle")
 	}
 	v.roleID = sec.Data["role_id"].(string)
@@ -281,6 +304,7 @@ func (v *Vault) initRole() error {
 	sec, err = v.vaultClient.Logical().Write("auth/approle/role/"+rName+"/secret-id",
 		map[string]interface{}{})
 	if err != nil {
+		smslogger.WriteError(err.Error())
 		return errors.New("Unable to create secret ID for role")
 	}
 
@@ -300,7 +324,8 @@ func (v *Vault) checkToken() error {
 	if v.initRoleDone == false {
 		err := v.initRole()
 		if err != nil {
-			return err
+			smslogger.WriteError(err.Error())
+			return errors.New("Unable to initRole in checkToken")
 		}
 	}
 
@@ -314,7 +339,8 @@ func (v *Vault) checkToken() error {
 	out, err := v.vaultClient.Logical().Write("auth/approle/login",
 		map[string]interface{}{"role_id": v.roleID, "secret_id": v.secretID})
 	if err != nil {
-		return err
+		smslogger.WriteError(err.Error())
+		return errors.New("Unable to create Temporary Token for Role")
 	}
 
 	tok, err := out.TokenID()
