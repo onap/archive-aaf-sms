@@ -50,14 +50,16 @@ func (h handler) createSecretDomainHandler(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	err = json.NewEncoder(w).Encode(dom)
+	jdata, err := json.Marshal(dom)
 	if err != nil {
 		smslogger.WriteError(err.Error())
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
+	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
+	w.Write(jdata)
 }
 
 // deleteSecretDomainHandler deletes a secret domain with the name provided
@@ -113,12 +115,15 @@ func (h handler) getSecretHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = json.NewEncoder(w).Encode(sec)
+	jdata, err := json.Marshal(sec)
 	if err != nil {
 		smslogger.WriteError(err.Error())
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(jdata)
 }
 
 // listSecretHandler handles listing all secrets under a particular domain name
@@ -133,12 +138,15 @@ func (h handler) listSecretHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = json.NewEncoder(w).Encode(sec)
+	jdata, err := json.Marshal(sec)
 	if err != nil {
 		smslogger.WriteError(err.Error())
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(jdata)
 }
 
 // deleteSecretHandler handles deleting a secret by given domain name and secret name
@@ -170,12 +178,15 @@ func (h handler) statusHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	status := backendStatus{Seal: s}
-	err = json.NewEncoder(w).Encode(status)
+	jdata, err := json.Marshal(status)
 	if err != nil {
 		smslogger.WriteError(err.Error())
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(jdata)
 }
 
 // loginHandler handles login via password and username
