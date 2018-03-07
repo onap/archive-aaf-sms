@@ -17,6 +17,8 @@
 package main
 
 import (
+	"crypto/tls"
+	"crypto/x509"
 	"encoding/base64"
 	"encoding/json"
 	"io/ioutil"
@@ -33,8 +35,12 @@ import (
 func main() {
 	//Struct to read json configuration file
 	type config struct {
-		B64Key  string `json:"key"`
-		TimeOut string `json:"timeout"`
+		BackEndURL string `json:"url"`
+		CAFile     string `json:"cafile"`
+		ClientCert string `json:"clientcert"`
+		ClientKey  string `json:"clientkey"`
+		B64Key     string `json:"key"`
+		TimeOut    string `json:"timeout"`
 	}
 	//Load the config File for reading
 	vcf, err := os.Open("config.json")
@@ -50,11 +56,31 @@ func main() {
 	}
 
 	duration, _ := time.ParseDuration(cfg.TimeOut)
+	ticker := time.NewTicker(duration)
 
-	for _ = range time.NewTicker(duration).C {
-		//Currently using a localhost host, later will be replaced with
-		//exact url
-		response, err := http.Get("http://localhost:8200/v1/sys/seal-status")
+	for _ = range ticker.C {
+
+		caCert, err := ioutil.ReadFile(cfg.CAFile)
+		if err != nil {
+			log.Fatalf("Error while reading CA file %v ", err)
+		}
+		caCertPool := x509.NewCertPool()
+		caCertPool.AppendCertsFromPEM(caCert)
+		cert, err := tls.LoadX509KeyPair(cfg.ClientCert, cfg.ClientKey)
+		if err != nil {
+			log.Fatalf("Error while loading key pair %v ", err)
+		}
+
+		client := &http.Client{
+			Transport: &http.Transport{
+				TLSClientConfig: &tls.Config{
+					RootCAs:      caCertPool,
+					Certificates: []tls.Certificate{cert},
+				},
+			},
+		}
+		//URL and Port is configured in config file
+		response, err := client.Get(cfg.BackEndURL + "v1/sms/status")
 		if err != nil {
 			log.Fatalf("Error while connecting to SMS webservice %v", err)
 		}
@@ -70,8 +96,8 @@ func main() {
 		if sealed {
 			decdB64Key, _ := base64.StdEncoding.DecodeString(cfg.B64Key)
 			body := strings.NewReader(`{"key":"` + string(decdB64Key) + `"}`)
-			//below url will be replaced with exact webservice
-			response, err = http.Post("http://127.0.0.1:8200/v1/sys/unseal", "application/x-www-form-urlencoded", body)
+			//URL and PORT is configured via config file
+			response, err = client.Post(cfg.BackEndURL+"v1/sms/unseal", "application/json", body)
 			if err != nil {
 				log.Fatalf("Error while unsealing %v", err)
 			}
