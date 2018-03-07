@@ -54,7 +54,7 @@ func main() {
 	for _ = range time.NewTicker(duration).C {
 		//Currently using a localhost host, later will be replaced with
 		//exact url
-		response, err := http.Get("http://localhost:8200/v1/sys/seal-status")
+		response, err := http.Get("https://localhost:10443/v1/sms/status")
 		if err != nil {
 			log.Fatalf("Error while connecting to SMS webservice %v", err)
 		}
@@ -71,7 +71,7 @@ func main() {
 			decdB64Key, _ := base64.StdEncoding.DecodeString(cfg.B64Key)
 			body := strings.NewReader(`{"key":"` + string(decdB64Key) + `"}`)
 			//below url will be replaced with exact webservice
-			response, err = http.Post("http://127.0.0.1:8200/v1/sys/unseal", "application/x-www-form-urlencoded", body)
+			response, err = http.Post("https://localhost:10443/v1/sms/unseal", "application/x-www-form-urlencoded", body)
 			if err != nil {
 				log.Fatalf("Error while unsealing %v", err)
 			}
