@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5a93c517_02c37a38",
+        "filename": "sms-quorum/src/smsquorum/quorumclient.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 57,
+      "author": {
+        "id": 301
+      },
+      "writtenOn": "2018-03-08T01:21:08Z",
+      "side": 1,
+      "message": "For https requests, you need to create a http client that can handle tls connections.See https://golang.org/pkg/net/http/ for more info on how to do this.",
+      "range": {
+        "startLine": 57,
+        "startChar": 19,
+        "endLine": 57,
+        "endChar": 68
+      },
+      "revId": "01944707ac6d33004fe3578ebaa6a192561396a1",
+      "serverId": "14b4e41f-c4e3-4fb9-9955-6a9b5656895a",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5a93c517_c2e032cf",
+        "filename": "sms-quorum/src/smsquorum/quorumclient.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 74,
+      "author": {
+        "id": 301
+      },
+      "writtenOn": "2018-03-08T01:21:08Z",
+      "side": 1,
+      "message": "Can you make URL and port a configuration parameter that is read from the config file?",
+      "range": {
+        "startLine": 74,
+        "startChar": 38,
+        "endLine": 74,
+        "endChar": 53
+      },
+      "revId": "01944707ac6d33004fe3578ebaa6a192561396a1",
+      "serverId": "14b4e41f-c4e3-4fb9-9955-6a9b5656895a",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5a93c517_22ec76ba",
+        "filename": "sms-quorum/src/smsquorum/quorumclient.go",
+        "patchSetId": 1
+      },
+      "lineNbr": 74,
+      "author": {
+        "id": 301
+      },
+      "writtenOn": "2018-03-08T01:21:08Z",
+      "side": 1,
+      "message": "this should be application/json",
+      "range": {
+        "startLine": 74,
+        "startChar": 71,
+        "endLine": 74,
+        "endChar": 105
+      },
+      "revId": "01944707ac6d33004fe3578ebaa6a192561396a1",
+      "serverId": "14b4e41f-c4e3-4fb9-9955-6a9b5656895a",
+      "unresolved": false
+    }
+  ]
+}
