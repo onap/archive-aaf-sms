@@ -19,6 +19,7 @@ package backend
 import (
 	uuid "github.com/hashicorp/go-uuid"
 	vaultapi "github.com/hashicorp/vault/api"
+	smsauth "sms/auth"
 	smslogger "sms/log"
 
 	"errors"
@@ -41,6 +42,10 @@ type Vault struct {
 	vaultMount        string
 	vaultTempTokenTTL time.Time
 	vaultToken        string
+	unsealShards      []string
+	rootToken         string
+	pgpPub            string
+	pgpPr             string
 }
 
 // Init will initialize the vault connection
@@ -348,4 +353,37 @@ func (v *Vault) checkToken() error {
 	v.vaultTempTokenTTL = time.Now()
 	v.vaultClient.SetToken(tok)
 	return nil
+}
+
+// vaultInit() is used to initialize the vault in cases where it is not
+// initialized. This happens once during intial bring up.
+func (v *Vault) initializeVault() error {
+	initReq := &vaultapi.InitRequest{
+		SecretShares:    5,
+		SecretThreshold: 3,
+	}
+
+	pbkey, prkey, err := smsauth.GeneratePGPKeyPair()
+	if err != nil {
+		smslogger.WriteError("Error Generating PGP Keys. Vault Init will not use encryption!")
+	} else {
+		initReq.PGPKeys = []string{pbkey, pbkey, pbkey, pbkey, pbkey}
+		initReq.RootTokenPGPKey = pbkey
+		v.pgpPub = pbkey
+		v.pgpPr = prkey
+	}
+
+	resp, err := v.vaultClient.Sys().Init(initReq)
+	if err != nil {
+		smslogger.WriteError(err.Error())
+		return errors.New("FATAL: Unable to initialize Vault")
+	}
+
+	if resp != nil {
+		v.unsealShards = resp.KeysB64
+		v.rootToken = resp.RootToken
+		return nil
+	}
+
+	return errors.New("FATAL: Init response was empty")
 }

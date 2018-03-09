@@ -17,9 +17,14 @@
 package auth
 
 import (
+	"bytes"
 	"crypto/tls"
 	"crypto/x509"
+	"encoding/base64"
+	"golang.org/x/crypto/openpgp"
 	"io/ioutil"
+
+	smslogger "sms/log"
 )
 
 var tlsConfig *tls.Config
@@ -46,4 +51,45 @@ func GetTLSConfig(caCertFile string) (*tls.Config, error) {
 		tlsConfig.BuildNameToCertificate()
 	}
 	return tlsConfig, nil
+}
+
+// GeneratePGPKeyPair produces a PGP key pair and returns
+// two things:
+// A base64 encoded form of the public part of the entity
+// A base64 encoded form of the private key
+func GeneratePGPKeyPair() (string, string, error) {
+	var entity *openpgp.Entity
+	entity, err := openpgp.NewEntity("aaf.sms.init", "PGP Key for unsealing", "", nil)
+	if err != nil {
+		smslogger.WriteError(err.Error())
+		return "", "", err
+	}
+
+	// Sign the identity in the entity
+	for _, id := range entity.Identities {
+		err = id.SelfSignature.SignUserId(id.UserId.Id, entity.PrimaryKey, entity.PrivateKey, nil)
+		if err != nil {
+			smslogger.WriteError(err.Error())
+			return "", "", err
+		}
+	}
+
+	// Sign the subkey in the entity
+	for _, subkey := range entity.Subkeys {
+		err := subkey.Sig.SignKey(subkey.PublicKey, entity.PrivateKey, nil)
+		if err != nil {
+			smslogger.WriteError(err.Error())
+			return "", "", err
+		}
+	}
+
+	buffer := new(bytes.Buffer)
+	entity.Serialize(buffer)
+	pbkey := base64.StdEncoding.EncodeToString(buffer.Bytes())
+
+	buffer.Reset()
+	entity.SerializePrivate(buffer, nil)
+	prkey := base64.StdEncoding.EncodeToString(buffer.Bytes())
+
+	return pbkey, prkey, nil
 }
