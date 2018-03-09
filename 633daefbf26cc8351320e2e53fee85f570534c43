@@ -48,6 +48,30 @@
     },
     {
       "key": {
+        "uuid": "5a93c517_d03d57de",
+        "filename": "sms-client/src/java/main/SmsClient.java",
+        "patchSetId": 3
+      },
+      "lineNbr": 118,
+      "author": {
+        "id": 3087
+      },
+      "writtenOn": "2018-03-09T04:00:40Z",
+      "side": 1,
+      "message": "The API call that sends the data over the wire takes a String anyways. This way user can choose any java object type and convert to String before calling this API. The JSONObject provides toString() method and can be used to convert to String. It\u0027s also very common in java to directly use String for small set of value pairs.",
+      "parentUuid": "5a93c517_90702f73",
+      "range": {
+        "startLine": 118,
+        "startChar": 64,
+        "endLine": 118,
+        "endChar": 77
+      },
+      "revId": "633daefbf26cc8351320e2e53fee85f570534c43",
+      "serverId": "14b4e41f-c4e3-4fb9-9955-6a9b5656895a",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "5a93c517_f06173a9",
         "filename": "sms-client/src/java/main/SmsClient.java",
         "patchSetId": 3
@@ -105,6 +129,30 @@
       "writtenOn": "2018-03-09T00:16:42Z",
       "side": 1,
       "message": "Should return a map or object with the values decoded from JSON response.",
+      "range": {
+        "startLine": 161,
+        "startChar": 8,
+        "endLine": 161,
+        "endChar": 21
+      },
+      "revId": "633daefbf26cc8351320e2e53fee85f570534c43",
+      "serverId": "14b4e41f-c4e3-4fb9-9955-6a9b5656895a",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5a93c517_7028039a",
+        "filename": "sms-client/src/java/main/SmsClient.java",
+        "patchSetId": 3
+      },
+      "lineNbr": 161,
+      "author": {
+        "id": 3087
+      },
+      "writtenOn": "2018-03-09T04:00:40Z",
+      "side": 1,
+      "message": "Same applies here also, we can return String and user can use whatever type of Object they prefer to parse/use them.",
+      "parentUuid": "5a93c517_d05a37f1",
       "range": {
         "startLine": 161,
         "startChar": 8,
