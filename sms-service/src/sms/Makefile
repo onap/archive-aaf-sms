@@ -1,5 +1,6 @@
 GOPATH := $(shell realpath "$(PWD)/../../")
 BINARY := sms
+PLATFORM := linux
 DEPENDENCIES := github.com/golang/dep/cmd/dep
 
 export GOPATH ...
@@ -8,7 +9,9 @@ all: test build
 deploy: test build
 
 build: deps format
-	go build -o $(GOPATH)/target/$(BINARY) -v sms.go
+	CGO_ENABLED=0 GOOS=$(PLATFORM) go build -a \
+	-ldflags '-extldflags "-static"' \
+	-o $(GOPATH)/target/$(BINARY) -v sms.go
 
 clean:
 	go clean
