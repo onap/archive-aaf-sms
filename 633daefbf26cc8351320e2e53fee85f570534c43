@@ -1,0 +1,165 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5a93c517_10a2dffc",
+        "filename": "sms-client/src/java/main/SmsClient.java",
+        "patchSetId": 3
+      },
+      "lineNbr": 118,
+      "author": {
+        "id": 301
+      },
+      "writtenOn": "2018-03-09T00:16:42Z",
+      "side": 1,
+      "message": "Should be storeSecret",
+      "range": {
+        "startLine": 118,
+        "startChar": 23,
+        "endLine": 118,
+        "endChar": 35
+      },
+      "revId": "633daefbf26cc8351320e2e53fee85f570534c43",
+      "serverId": "14b4e41f-c4e3-4fb9-9955-6a9b5656895a",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5a93c517_90702f73",
+        "filename": "sms-client/src/java/main/SmsClient.java",
+        "patchSetId": 3
+      },
+      "lineNbr": 118,
+      "author": {
+        "id": 301
+      },
+      "writtenOn": "2018-03-09T00:16:42Z",
+      "side": 1,
+      "message": "Should take a java map as input and that should get converted to JSON object before being sent over the wire.",
+      "range": {
+        "startLine": 118,
+        "startChar": 64,
+        "endLine": 118,
+        "endChar": 77
+      },
+      "revId": "633daefbf26cc8351320e2e53fee85f570534c43",
+      "serverId": "14b4e41f-c4e3-4fb9-9955-6a9b5656895a",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5a93c517_f06173a9",
+        "filename": "sms-client/src/java/main/SmsClient.java",
+        "patchSetId": 3
+      },
+      "lineNbr": 134,
+      "author": {
+        "id": 301
+      },
+      "writtenOn": "2018-03-09T00:16:42Z",
+      "side": 1,
+      "message": "Should be Secret",
+      "range": {
+        "startLine": 134,
+        "startChar": 26,
+        "endLine": 134,
+        "endChar": 33
+      },
+      "revId": "633daefbf26cc8351320e2e53fee85f570534c43",
+      "serverId": "14b4e41f-c4e3-4fb9-9955-6a9b5656895a",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5a93c517_1065ffb3",
+        "filename": "sms-client/src/java/main/SmsClient.java",
+        "patchSetId": 3
+      },
+      "lineNbr": 149,
+      "author": {
+        "id": 301
+      },
+      "writtenOn": "2018-03-09T00:16:42Z",
+      "side": 1,
+      "message": "Same",
+      "range": {
+        "startLine": 149,
+        "startChar": 31,
+        "endLine": 149,
+        "endChar": 38
+      },
+      "revId": "633daefbf26cc8351320e2e53fee85f570534c43",
+      "serverId": "14b4e41f-c4e3-4fb9-9955-6a9b5656895a",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5a93c517_d05a37f1",
+        "filename": "sms-client/src/java/main/SmsClient.java",
+        "patchSetId": 3
+      },
+      "lineNbr": 161,
+      "author": {
+        "id": 301
+      },
+      "writtenOn": "2018-03-09T00:16:42Z",
+      "side": 1,
+      "message": "Should return a map or object with the values decoded from JSON response.",
+      "range": {
+        "startLine": 161,
+        "startChar": 8,
+        "endLine": 161,
+        "endChar": 21
+      },
+      "revId": "633daefbf26cc8351320e2e53fee85f570534c43",
+      "serverId": "14b4e41f-c4e3-4fb9-9955-6a9b5656895a",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5a93c517_f00893db",
+        "filename": "sms-client/src/java/main/SmsClient.java",
+        "patchSetId": 3
+      },
+      "lineNbr": 165,
+      "author": {
+        "id": 301
+      },
+      "writtenOn": "2018-03-09T00:16:42Z",
+      "side": 1,
+      "message": "We should call it delete instead of destroy for consistent naming between deleteDomain and deleteSecret.",
+      "range": {
+        "startLine": 165,
+        "startChar": 23,
+        "endLine": 165,
+        "endChar": 30
+      },
+      "revId": "633daefbf26cc8351320e2e53fee85f570534c43",
+      "serverId": "14b4e41f-c4e3-4fb9-9955-6a9b5656895a",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5a93c517_b0576bc9",
+        "filename": "sms-client/src/java/main/SmsClient.java",
+        "patchSetId": 3
+      },
+      "lineNbr": 165,
+      "author": {
+        "id": 301
+      },
+      "writtenOn": "2018-03-09T00:16:42Z",
+      "side": 1,
+      "message": "Same",
+      "range": {
+        "startLine": 165,
+        "startChar": 30,
+        "endLine": 165,
+        "endChar": 37
+      },
+      "revId": "633daefbf26cc8351320e2e53fee85f570534c43",
+      "serverId": "14b4e41f-c4e3-4fb9-9955-6a9b5656895a",
+      "unresolved": false
+    }
+  ]
+}
