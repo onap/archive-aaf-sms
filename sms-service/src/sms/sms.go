@@ -24,9 +24,13 @@ import (
 	smsbackend "sms/backend"
 	smsconfig "sms/config"
 	smshandler "sms/handler"
+	smslogger "sms/log"
 )
 
 func main() {
+	// Initialize logger
+	smslogger.Init("sms.log")
+
 	// Read Configuration File
 	smsConf, err := smsconfig.ReadConfigFile("smsconfig.json")
 	if err != nil {

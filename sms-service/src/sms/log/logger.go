@@ -25,18 +25,19 @@ var errLogger *log.Logger
 var warnLogger *log.Logger
 var infoLogger *log.Logger
 
-func init() {
-	f, err := os.OpenFile("sms.log", os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
+// Init will be called by sms.go before any other packages use it
+func Init(filePath string) {
+	f, err := os.Create(filePath)
 	if err != nil {
 		log.Println("Unable to create a log file")
 		log.Println(err)
-		errLogger = log.New(os.Stderr, "ERROR: ", log.Lshortfile)
-		warnLogger = log.New(os.Stdout, "WARNING: ", log.Lshortfile)
-		infoLogger = log.New(os.Stdout, "INFO: ", log.Lshortfile)
+		errLogger = log.New(os.Stderr, "ERROR: ", log.Lshortfile|log.LstdFlags)
+		warnLogger = log.New(os.Stdout, "WARNING: ", log.Lshortfile|log.LstdFlags)
+		infoLogger = log.New(os.Stdout, "INFO: ", log.Lshortfile|log.LstdFlags)
 	} else {
-		errLogger = log.New(f, "ERROR: ", log.Lshortfile)
-		warnLogger = log.New(f, "WARNING: ", log.Lshortfile)
-		infoLogger = log.New(f, "INFO: ", log.Lshortfile)
+		errLogger = log.New(f, "ERROR: ", log.Lshortfile|log.LstdFlags)
+		warnLogger = log.New(f, "WARNING: ", log.Lshortfile|log.LstdFlags)
+		infoLogger = log.New(f, "INFO: ", log.Lshortfile|log.LstdFlags)
 	}
 }
 
