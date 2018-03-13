@@ -31,12 +31,12 @@ import (
 
 // Vault is the main Struct used in Backend to initialize the struct
 type Vault struct {
+	sync.Mutex
 	engineType        string
 	initRoleDone      bool
 	policyName        string
 	roleID            string
 	secretID          string
-	tokenLock         sync.Mutex
 	vaultAddress      string
 	vaultClient       *vaultapi.Client
 	vaultMount        string
@@ -321,8 +321,8 @@ func (v *Vault) initRole() error {
 // Function checkToken() gets called multiple times to create
 // temporary tokens
 func (v *Vault) checkToken() error {
-	v.tokenLock.Lock()
-	defer v.tokenLock.Unlock()
+	v.Lock()
+	defer v.Unlock()
 
 	// Init Role if it is not yet done
 	// Role needs to be created before token can be created
