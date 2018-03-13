@@ -131,14 +131,21 @@ func (h handler) listSecretHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	domName := vars["domName"]
 
-	sec, err := h.secretBackend.ListSecret(domName)
+	secList, err := h.secretBackend.ListSecret(domName)
 	if err != nil {
 		smslogger.WriteError(err.Error())
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	jdata, err := json.Marshal(sec)
+	// Creating an anonymous struct to store the returned list of data
+	var retStruct = struct {
+		SecretNames []string `json:"secretnames"`
+	}{
+		secList,
+	}
+
+	jdata, err := json.Marshal(retStruct)
 	if err != nil {
 		smslogger.WriteError(err.Error())
 		http.Error(w, err.Error(), http.StatusInternalServerError)
