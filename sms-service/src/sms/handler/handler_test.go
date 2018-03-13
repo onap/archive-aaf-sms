@@ -249,9 +249,16 @@ func TestListSecretHandler(t *testing.T) {
 		t.Errorf("Expected statusCreated return code. Got: %v", rr.Code)
 	}
 
-	expected := []string{"testsecret1", "testsecret2"}
+	var expected = struct {
+		SecretNames []string `json:"secretnames"`
+	}{
+		[]string{"testsecret1", "testsecret2"},
+	}
 
-	var got []string
+	var got struct {
+		SecretNames []string `json:"secretnames"`
+	}
+
 	json.NewDecoder(rr.Body).Decode(&got)
 
 	if reflect.DeepEqual(expected, got) == false {

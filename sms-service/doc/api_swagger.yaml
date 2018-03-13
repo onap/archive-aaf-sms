@@ -89,12 +89,14 @@ paths:
             properties:
               unsealshard:
                 type: string
-                description: Unseal shard that will be used along with other shards to unseal backend
+                description: >-
+                  Unseal shard that will be used along with other shards to
+                  unseal backend
       responses:
         '201':
           description: Submitted unseal key
         '404':
-          description: Invalid Path or Path not found          
+          description: Invalid Path or Path not found
   /domain:
     post:
       tags:
@@ -182,10 +184,15 @@ paths:
         '200':
           description: Successful operation
           schema:
-            type: array
-            items:
-              type: string 
-            example: ['secret1', 'secret2', 'secret3']
+            type: object
+            properties:
+              secretnames:
+                type: array
+                items:
+                  type: string
+                description: Array of strings referencing the secret names
+            example:
+              secretnames: ["secretname1", "secretname2", "secretname3"]
         '404':
           description: Invalid Path or Path not found
   '/domain/{domainName}/secret/{secretName}':
@@ -239,9 +246,9 @@ paths:
           description: Invalid Path or Path not found
 securityDefinitions:
   token:
-    type: "apiKey"
-    name: "token"
-    in: "header"
+    type: apiKey
+    name: token
+    in: header
 definitions:
   Credential:
     type: object
@@ -273,9 +280,9 @@ definitions:
         additionalProperties:
           type: object
         example:
-          "name": "john"
-          "Age": 40
-          "admin": true
+          name: john
+          Age: 40
+          admin: true
 externalDocs:
   description: Find out more about Swagger
   url: 'http://swagger.io'
