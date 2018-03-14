@@ -1,0 +1,44 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5a93c517_57a12a44",
+        "filename": "sms-client/src/java/example/SmsClientExample.java",
+        "patchSetId": 1
+      },
+      "lineNbr": 19,
+      "author": {
+        "id": 3087
+      },
+      "writtenOn": "2018-03-14T18:22:36Z",
+      "side": 1,
+      "message": "Let\u0027s keep all the java.net.* together so that code looks more structured.",
+      "revId": "1c72bf9c106be462678d112e7da309a0ff630875",
+      "serverId": "14b4e41f-c4e3-4fb9-9955-6a9b5656895a",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5a93c517_f78b96c0",
+        "filename": "sms-client/src/java/example/SmsClientExample.java",
+        "patchSetId": 1
+      },
+      "lineNbr": 104,
+      "author": {
+        "id": 3087
+      },
+      "writtenOn": "2018-03-14T18:22:36Z",
+      "side": 1,
+      "message": "Change this name to reflect the change above.",
+      "range": {
+        "startLine": 104,
+        "startChar": 64,
+        "endLine": 104,
+        "endChar": 68
+      },
+      "revId": "1c72bf9c106be462678d112e7da309a0ff630875",
+      "serverId": "14b4e41f-c4e3-4fb9-9955-6a9b5656895a",
+      "unresolved": false
+    }
+  ]
+}
