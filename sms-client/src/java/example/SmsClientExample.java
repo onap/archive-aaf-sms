@@ -14,20 +14,22 @@
  * limitations under the License.
  */
 
+import java.lang.Integer;
+import java.lang.Boolean;
+import java.net.URL;
 import java.security.Provider;
 import java.security.Security;
 import java.security.KeyStore;
 import java.security.SecureRandom;
+import java.util.Map;
+import java.util.HashMap;
 import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.TrustManagerFactory;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSocketFactory;
 import javax.net.ssl.SSLSessionContext;
 import java.io.FileInputStream;
-import java.net.URL;
 import javax.net.ssl.HttpsURLConnection;
-import java.util.Map;
-import java.util.HashMap;
 import org.onap.aaf.sms.SmsClient;
 import org.onap.aaf.sms.SmsResponse;
 
@@ -80,7 +82,11 @@ public class SmsClientExample {
         }
         Map<String, Object> m2 = new HashMap<String, Object>();
         m2.put("username", "dbuser");
-        SmsResponse resp3 = sms.storeSecret("onap.new.test.sms0","user", m2);
+        m2.put("isadmin", new Boolean(true));
+        m2.put("age", new Integer(40));
+        m2.put("secretkey", "asjdhkuhioeukadfjsadnfkjhsdukfhaskdjhfasdf");
+        m2.put("token", "2139084553458973452349230849234234908234342");
+        SmsResponse resp3 = sms.storeSecret("onap.new.test.sms0","credentials", m2);
         if ( resp3.getSuccess() ) {
             System.out.println(resp3.getResponse());
             System.out.println(resp3.getResponseCode());
