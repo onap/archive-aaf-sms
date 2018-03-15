@@ -48,6 +48,17 @@ public class SmsClient implements SmsInterface {
         ssf = s;
     }
 
+    private  Map<String, Object> getSubmap(Map<String, Object> raw, String k) {
+        Object v = raw.get(k);
+        if ( v != null ) {
+            Map<String, Object> r = (Map<String, Object>)v;
+            return(r);
+        }
+        else {
+            return(null);
+        }
+    }
+
     private List<Object> jsontolist(JSONArray a) throws JSONException {
         List<Object> l = new ArrayList<Object>();
         for(int i=0;i<a.length();i++) {
@@ -210,10 +221,13 @@ public class SmsClient implements SmsInterface {
         SmsResponse resp = execute("GET", t, null, false, true);
         int errcode = resp.getResponseCode();
 
-        if ( errcode > 0 && errcode/100 == 2 )
+        if ( errcode > 0 && errcode/100 == 2 ) {
             resp.setSuccess(true);
-        else
+            resp.setResponse(getSubmap(resp.getResponse(), "values"));
+        }
+        else {
             resp.setSuccess(false);
+        }
 
         return(resp);
 
