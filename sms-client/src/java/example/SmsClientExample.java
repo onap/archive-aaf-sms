@@ -103,6 +103,9 @@ public class SmsClientExample {
         }
         SmsResponse resp6= sms.getSecret("onap.new.test.sms0", "credentials");
         if ( resp6.getSuccess() ) {
+            Boolean b = (Boolean)resp6.getResponse().get("isadmin");
+            if ( b )
+                System.out.println("Age=" + (Integer)resp6.getResponse().get("age"));
             System.out.println(resp6.getResponse());
             System.out.println(resp6.getResponseCode());
         }
