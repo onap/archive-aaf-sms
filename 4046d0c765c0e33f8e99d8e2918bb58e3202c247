@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5a93c517_b0f2d96d",
+        "filename": "sms-service/bin/build_image.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 45,
+      "author": {
+        "id": 991
+      },
+      "writtenOn": "2018-03-20T22:17:38Z",
+      "side": 1,
+      "message": "Commented out.",
+      "revId": "4046d0c765c0e33f8e99d8e2918bb58e3202c247",
+      "serverId": "14b4e41f-c4e3-4fb9-9955-6a9b5656895a",
+      "unresolved": false
+    }
+  ]
+}
