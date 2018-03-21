@@ -40,6 +40,7 @@ type SecretBackend interface {
 	Init() error
 	GetStatus() (bool, error)
 	Unseal(shard string) error
+	RegisterQuorum(pgpkey string, quorumid string) error
 
 	GetSecret(dom string, sec string) (Secret, error)
 	ListSecret(dom string) ([]string, error)
@@ -55,7 +56,6 @@ type SecretBackend interface {
 func InitSecretBackend() (SecretBackend, error) {
 	backendImpl := &Vault{
 		vaultAddress: smsconfig.SMSConfig.BackendAddress,
-		vaultToken:   smsconfig.SMSConfig.VaultToken,
 	}
 
 	err := backendImpl.Init()

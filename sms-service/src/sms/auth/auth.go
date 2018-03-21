@@ -18,6 +18,7 @@ package auth
 
 import (
 	"bytes"
+	"crypto"
 	"crypto/tls"
 	"crypto/x509"
 	"encoding/base64"
@@ -61,7 +62,11 @@ func GetTLSConfig(caCertFile string) (*tls.Config, error) {
 // A base64 encoded form of the private key
 func GeneratePGPKeyPair() (string, string, error) {
 	var entity *openpgp.Entity
-	entity, err := openpgp.NewEntity("aaf.sms.init", "PGP Key for unsealing", "", nil)
+	config := &packet.Config{
+		DefaultHash: crypto.SHA256,
+	}
+
+	entity, err := openpgp.NewEntity("aaf.sms.init", "PGP Key for unsealing", "", config)
 	if err != nil {
 		smslogger.WriteError(err.Error())
 		return "", "", err
@@ -96,9 +101,50 @@ func GeneratePGPKeyPair() (string, string, error) {
 	return pbkey, prkey, nil
 }
 
-// DecryptPGPBytes decrypts a PGP encoded input string and returns
+// EncryptPGPString takes data and a public key and encrypts using that
+// public key
+func EncryptPGPString(data string, pbKey string) (string, error) {
+	pbKeyBytes, err := base64.StdEncoding.DecodeString(pbKey)
+	if err != nil {
+		smslogger.WriteError("Error Decoding base64 public key: " + err.Error())
+		return "", err
+	}
+
+	dataBytes := []byte(data)
+
+	pbEntity, err := openpgp.ReadEntity(packet.NewReader(bytes.NewBuffer(pbKeyBytes)))
+	if err != nil {
+		smslogger.WriteError("Error reading entity from PGP key: " + err.Error())
+		return "", err
+	}
+
+	// encrypt string
+	buf := new(bytes.Buffer)
+	out, err := openpgp.Encrypt(buf, []*openpgp.Entity{pbEntity}, nil, nil, nil)
+	if err != nil {
+		smslogger.WriteError("Error Creating Encryption Pipe")
+		smslogger.WriteError(err.Error())
+		return "", err
+	}
+	_, err = out.Write(dataBytes)
+	if err != nil {
+		smslogger.WriteError("Error Writing to Encryption Pipe")
+		return "", err
+	}
+
+	err = out.Close()
+	if err != nil {
+		smslogger.WriteError("Error Closing Encryption Pipe")
+		return "", err
+	}
+
+	crp := base64.StdEncoding.EncodeToString(buf.Bytes())
+	return crp, nil
+}
+
+// DecryptPGPString decrypts a PGP encoded input string and returns
 // a base64 representation of the decoded string
-func DecryptPGPBytes(data string, prKey string) (string, error) {
+func DecryptPGPString(data string, prKey string) (string, error) {
 	// Convert private key to bytes from base64
 	prKeyBytes, err := base64.StdEncoding.DecodeString(prKey)
 	if err != nil {
@@ -129,4 +175,31 @@ func DecryptPGPBytes(data string, prKey string) (string, error) {
 	retBuf.ReadFrom(message.UnverifiedBody)
 
 	return retBuf.String(), nil
+}
+
+// ReadKeysFromFile reads a file and loads the PGP key into
+// a string
+func ReadKeysFromFile(fileName string) (string, error) {
+	data, err := ioutil.ReadFile(fileName)
+	if err != nil {
+		smslogger.WriteError(err.Error())
+		smslogger.WriteError("Cannot read file: " + fileName)
+		return "", err
+	}
+
+	return string(data), nil
+}
+
+// WriteKeysToFile writes a PGP key into a file.
+// It will truncate the file if it exists
+func WriteKeysToFile(data string, fileName string) error {
+	dataBytes := []byte(data)
+	err := ioutil.WriteFile(fileName, dataBytes, 0600)
+	if err != nil {
+		smslogger.WriteError(err.Error())
+		smslogger.WriteError("Cannot write to file: " + fileName)
+		return err
+	}
+
+	return nil
 }

@@ -47,6 +47,10 @@ func (b *TestBackend) Unseal(shard string) error {
 	return nil
 }
 
+func (b *TestBackend) RegisterQuorum(pgpkey string, quorumid string) error {
+	return nil
+}
+
 func (b *TestBackend) GetSecret(dom string, sec string) (smsbackend.Secret, error) {
 	return smsbackend.Secret{
 		Name: "testsecret",
