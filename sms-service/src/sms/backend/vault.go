@@ -19,11 +19,14 @@ package backend
 import (
 	uuid "github.com/hashicorp/go-uuid"
 	vaultapi "github.com/hashicorp/vault/api"
+	"io/ioutil"
 	smsauth "sms/auth"
 	smslogger "sms/log"
 
 	"errors"
 	"fmt"
+	"path/filepath"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -64,6 +67,9 @@ func (v *Vault) Init() error {
 	v.internalDomain = "smsinternaldomain"
 	v.internalDomainMounted = false
 
+	// Initialize vault if it is not already
+	v.initializeVault()
+
 	err = v.initRole()
 	if err != nil {
 		smslogger.WriteError(err.Error())
@@ -82,6 +88,17 @@ func (v *Vault) GetStatus() (bool, error) {
 		return false, errors.New("Error getting status")
 	}
 	return sealStatus.Sealed, nil
+}
+
+// RegisterQuorum registers the PGP public key for a quorum client
+func (v *Vault) RegisterQuorum(pgpkey string, quorumID string) error {
+	pgpFilePath := filepath.Join("auth", quorumID+".pgp")
+	err := smsauth.WriteKeysToFile(pgpkey, pgpFilePath)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // Unseal is a passthrough API that allows any
@@ -332,18 +349,28 @@ func (v *Vault) initRole() error {
 	v.vaultClient.SetToken(v.vaultToken)
 	defer v.vaultClient.ClearToken()
 
+	// Check if roleID and secretID has already been created
+	rID, error := smsauth.ReadKeysFromFile("auth/role")
+	if error != nil {
+		smslogger.WriteWarn("Unable to find RoleID. Generating...")
+	} else {
+		sID, error := smsauth.ReadKeysFromFile("auth/secret")
+		if error != nil {
+			smslogger.WriteWarn("Unable to find secretID. Generating...")
+		} else {
+			v.roleID = rID
+			v.secretID = sID
+			v.initRoleDone = true
+			return nil
+		}
+	}
+
 	rules := `path "sms/*" { capabilities = ["create", "read", "update", "delete", "list"] }
 			path "sys/mounts/sms*" { capabilities = ["update","delete","create"] }`
 	err := v.vaultClient.Sys().PutPolicy(v.policyName, rules)
 	if err != nil {
 		smslogger.WriteError(err.Error())
 		return errors.New("Unable to create policy for approle creation")
-	}
-
-	rName := v.vaultMountPrefix + "-role"
-	data := map[string]interface{}{
-		"token_ttl": "60m",
-		"policies":  [2]string{"default", v.policyName},
 	}
 
 	//Check if applrole is mounted
@@ -366,6 +393,12 @@ func (v *Vault) initRole() error {
 		v.vaultClient.Sys().EnableAuth("approle", "approle", "")
 	}
 
+	rName := v.vaultMountPrefix + "-role"
+	data := map[string]interface{}{
+		"token_ttl": "60m",
+		"policies":  [2]string{"default", v.policyName},
+	}
+
 	// Create a role-id
 	v.vaultClient.Logical().Write("auth/approle/role/"+rName, data)
 	sec, err := v.vaultClient.Logical().Read("auth/approle/role/" + rName + "/role-id")
@@ -383,8 +416,26 @@ func (v *Vault) initRole() error {
 		return errors.New("Unable to create secret ID for role")
 	}
 
+	fmt.Println(sec.Data)
+
 	v.secretID = sec.Data["secret_id"].(string)
 	v.initRoleDone = true
+	/*
+	* Revoke the Root token.
+	* If a new Root Token is needed, it will need to be created
+	* using the unseal shards.
+	 */
+	err = v.vaultClient.Auth().Token().RevokeSelf(v.vaultToken)
+	if err != nil {
+		smslogger.WriteWarn(err.Error())
+		smslogger.WriteWarn("Unable to Revoke Token")
+	}
+
+	// Store the role-id and secret-id
+	// We will need this if SMS restarts
+	smsauth.WriteKeysToFile(v.roleID, "auth/role")
+	smsauth.WriteKeysToFile(v.secretID, "auth/secret")
+
 	return nil
 }
 
@@ -428,16 +479,38 @@ func (v *Vault) checkToken() error {
 // vaultInit() is used to initialize the vault in cases where it is not
 // initialized. This happens once during intial bring up.
 func (v *Vault) initializeVault() error {
+	// Check for vault init status and don't exit till it is initialized
+	for {
+		init, err := v.vaultClient.Sys().InitStatus()
+		if err != nil {
+			smslogger.WriteError("Unable to get initStatus, trying again in 10s: " + err.Error())
+			time.Sleep(time.Second * 10)
+			continue
+		}
+		// Did not get any error
+		if init == true {
+			smslogger.WriteInfo("Vault is already Initialized")
+			return nil
+		}
+
+		// init status is false
+		// break out of loop and finish initialization
+		smslogger.WriteInfo("Vault is not initialized. Initializing...")
+		break
+	}
+
+	// Hardcoded this to 3. We should make this configurable
+	// in the future
 	initReq := &vaultapi.InitRequest{
-		SecretShares:    5,
+		SecretShares:    3,
 		SecretThreshold: 3,
 	}
 
-	pbkey, _, err := smsauth.GeneratePGPKeyPair()
+	pbkey, prkey, err := smsauth.GeneratePGPKeyPair()
 	if err != nil {
 		smslogger.WriteError("Error Generating PGP Keys. Vault Init will not use encryption!")
 	} else {
-		initReq.PGPKeys = []string{pbkey, pbkey, pbkey, pbkey, pbkey}
+		initReq.PGPKeys = []string{pbkey, pbkey, pbkey}
 		initReq.RootTokenPGPKey = pbkey
 	}
 
@@ -448,10 +521,26 @@ func (v *Vault) initializeVault() error {
 	}
 
 	if resp != nil {
-		//v.writeUnsealShards(resp.KeysB64)
-		v.vaultToken = resp.RootToken
+		shards := make([]string, len(resp.KeysB64))
+		for i, shard := range resp.KeysB64 {
+			shards[i], _ = smsauth.DecryptPGPString(shard, prkey)
+		}
+		v.writeUnsealShards(shards)
+		v.vaultToken, _ = smsauth.DecryptPGPString(resp.RootToken, prkey)
 		return nil
 	}
 
 	return errors.New("FATAL: Init response was empty")
+}
+
+func (v *Vault) writeUnsealShards(unsealShards []string) error {
+	for i, v := range unsealShards {
+		err := ioutil.WriteFile("auth/shard_"+strconv.Itoa(i), []byte(v), 0644)
+		if err != nil {
+			smslogger.WriteError("Unable to write shard to disk: " + err.Error())
+			return errors.New("Unable to write shard: " + strconv.Itoa(i))
+		}
+	}
+	smslogger.WriteInfo("All Shards written to files in auth/")
+	return nil
 }

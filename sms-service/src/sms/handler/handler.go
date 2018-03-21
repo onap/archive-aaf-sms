@@ -229,6 +229,34 @@ func (h handler) unsealHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// registerHandler allows the quorum clients to register with SMS
+// with their PGP public keys that are then used by sms for backend
+// initialization
+func (h handler) registerHandler(w http.ResponseWriter, r *http.Request) {
+	// Get shards to be used for unseal
+	type registerStruct struct {
+		PGPKey   string `json:"pgpkey"`
+		QuorumID string `json:"quorumid"`
+	}
+
+	var inp registerStruct
+	decoder := json.NewDecoder(r.Body)
+	decoder.DisallowUnknownFields()
+	err := decoder.Decode(&inp)
+	if err != nil {
+		smslogger.WriteError(err.Error())
+		http.Error(w, "Bad input JSON", http.StatusBadRequest)
+		return
+	}
+
+	err = h.secretBackend.RegisterQuorum(inp.PGPKey, inp.QuorumID)
+	if err != nil {
+		smslogger.WriteError(err.Error())
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+}
+
 // CreateRouter returns an http.Handler for the registered URLs
 // Takes an interface implementation as input
 func CreateRouter(b smsbackend.SecretBackend) http.Handler {
@@ -241,8 +269,9 @@ func CreateRouter(b smsbackend.SecretBackend) http.Handler {
 
 	// Initialization APIs which will be used by quorum client
 	// to unseal and to provide root token to sms service
-	router.HandleFunc("/v1/sms/status", h.statusHandler).Methods("GET")
-	router.HandleFunc("/v1/sms/unseal", h.unsealHandler).Methods("POST")
+	router.HandleFunc("/v1/sms/quorum/status", h.statusHandler).Methods("GET")
+	router.HandleFunc("/v1/sms/quorum/unseal", h.unsealHandler).Methods("POST")
+	router.HandleFunc("/v1/sms/quorum/register", h.registerHandler).Methods("POST")
 
 	router.HandleFunc("/v1/sms/domain", h.createSecretDomainHandler).Methods("POST")
 	router.HandleFunc("/v1/sms/domain/{domName}", h.deleteSecretDomainHandler).Methods("DELETE")
