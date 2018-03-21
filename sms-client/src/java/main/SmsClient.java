@@ -91,14 +91,14 @@ public class SmsClient implements SmsInterface {
         return(m);
     }
 
-    private Map<String, Object> strtomap(String r) throws JSONException {
+    protected Map<String, Object> strtomap(String r) throws JSONException {
         JSONObject jobj = null;
 
         jobj = new JSONObject(r);
         return(jsontomap(jobj));
 
     }
-    private SmsResponse execute(String reqtype, String t, String ins, boolean input, boolean output) {
+    protected SmsResponse execute(String reqtype, String t, String ins, boolean input, boolean output) {
 
         HttpsURLConnection conn;
         int errorcode = -1;
