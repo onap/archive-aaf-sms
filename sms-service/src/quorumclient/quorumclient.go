@@ -21,6 +21,7 @@ import (
 	"crypto/x509"
 	"encoding/base64"
 	"encoding/json"
+	uuid "github.com/hashicorp/go-uuid"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -31,11 +32,55 @@ import (
 	"time"
 )
 
+func readMyID() (string, error) {
+	data, err := ioutil.ReadFile("myid.cfg")
+	if err != nil {
+		smslogger.WriteWarn("Unable to read myid.cfg")
+		return "", err
+	}
+	return string(data), nil
+}
+
+func writeMyID(data string) error {
+	err := ioutil.WriteFile("myid.cfg", []byte(data), 0600)
+	if err != nil {
+		smslogger.WriteWarn("Unable to write myid.cfg")
+		return err
+	}
+	return nil
+}
+
 //This application checks the backend status and
 //calls necessary initialization endpoints on the
 //SMS webservice
 func main() {
 	smslogger.Init("quorumclient.log")
+	smslogger.WriteInfo("Starting Log for Quorum Client")
+
+	/*
+		myID is used to uniquely identify the quorum client
+		Using any other information such as hostname is not
+		guaranteed to be unique.
+		In Kubernetes, pod restarts will also change the hostname
+	*/
+	myID, err := readMyID()
+	if err != nil {
+		smslogger.WriteWarn("Unable to find an ID for this client. Generating...")
+		myID, _ = uuid.GenerateUUID()
+		writeMyID(myID)
+	}
+
+	/*
+		readMyShard will read the shard from disk when this client
+		instance restarts. It will return err when a shard is not found.
+		This is the case for first startup
+	*/
+	registrationDone := true
+	myShard, err := readMyShard()
+	if err != nil {
+		smslogger.WriteWarn("Unable to find a shard file. Registering with SMS...")
+		registrationDone = false
+	}
 
 	//Struct to read json configuration file
 	type config struct {
@@ -90,7 +135,17 @@ func main() {
 		Transport: &transport,
 	}
 
-	smsauth.GeneratePGPKeyPair()
+	pbkey, prkey, err := smsauth.GeneratePGPKeyPair()
+	if err != nil {
+		smslogger.WriteError("Unable to create PGP Key Pair, using defaults: " + err.Error())
+		// Following commands should always work
+		pbkey, _ = smsauth.ReadKeysFromFile("def.pb")
+		prkey, _ = smsauth.ReadKeysFromFile("def.pr")
+	}
+
+	// Storing the keys to file to allow for recovery during restarts
+	smsauth.WriteKeysToFile(pbkey, "gen.pb")
+	smsauth.WriteKeysToFile(prkey, "gen.pr")
 
 	duration, _ := time.ParseDuration(cfg.TimeOut)
 	ticker := time.NewTicker(duration)
@@ -98,26 +153,41 @@ func main() {
 	for _ = range ticker.C {
 
 		//URL and Port is configured in config file
-		response, err := client.Get(cfg.BackEndURL + "/v1/sms/status")
+		response, err := client.Get(cfg.BackEndURL + "/v1/sms/quorum/status")
 		if err != nil {
-			log.Fatalf("Error while connecting to SMS webservice %v", err)
+			smslogger.WriteError("Unable to connect to SMS. Retrying...")
+			continue
 		}
 
-		responseData, err := ioutil.ReadAll(response.Body)
-		if err != nil {
-			log.Fatalf("Error while reading response %v", err)
+		var data struct {
+			Seal bool `json:"sealstatus"`
 		}
+		err = json.NewDecoder(response.Body).Decode(&data)
 
-		var data map[string]interface{}
-		json.Unmarshal(responseData, &data)
-		sealed := data["sealed"].(bool)
+		sealed := data.Seal
 
 		// Unseal the vault if sealed
 		if sealed {
-			decdB64Key, _ := base64.StdEncoding.DecodeString(cfg.B64Key)
-			body := strings.NewReader(`{"key":"` + string(decdB64Key) + `"}`)
+			//Register with SMS if not already done so
+			if !registrationDone {
+				body := strings.NewReader(`{"pgpkey":"` + pbkey + `","quorumid":"` + myID + `"}`)
+				res, err := client.Post(cfg.BackEndURL+"/v1/sms/quorum/register", "application/json", body)
+				if err != nil {
+					smslogger.WriteError("Ran into error during registration. Retrying...")
+					continue
+				}
+				registrationDone = true
+				var data struct {
+					Shard string `json:"shard"`
+				}
+				json.NewDecoder(res.Body).Decode(&data)
+			}
+
+			decShard, err := smsauth.DecryptPGPString(myShard, prkey)
+			decdB64Shard, _ := base64.StdEncoding.DecodeString(decShard)
+			body := strings.NewReader(`{"key":"` + string(decdB64Shard) + `"}`)
 			//URL and PORT is configured via config file
-			response, err = client.Post(cfg.BackEndURL+"/v1/sms/unseal", "application/json", body)
+			response, err = client.Post(cfg.BackEndURL+"/v1/sms/quorum/unseal", "application/json", body)
 			if err != nil {
 				log.Fatalf("Error while unsealing %v", err)
 			}
