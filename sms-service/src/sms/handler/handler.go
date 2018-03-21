@@ -50,16 +50,14 @@ func (h handler) createSecretDomainHandler(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	jdata, err := json.Marshal(dom)
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusCreated)
+	err = json.NewEncoder(w).Encode(dom)
 	if err != nil {
 		smslogger.WriteError(err.Error())
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusCreated)
-	w.Write(jdata)
 }
 
 // deleteSecretDomainHandler deletes a secret domain with the name provided
@@ -115,15 +113,13 @@ func (h handler) getSecretHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	jdata, err := json.Marshal(sec)
+	w.Header().Set("Content-Type", "application/json")
+	err = json.NewEncoder(w).Encode(sec)
 	if err != nil {
 		smslogger.WriteError(err.Error())
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-
-	w.Header().Set("Content-Type", "application/json")
-	w.Write(jdata)
 }
 
 // listSecretHandler handles listing all secrets under a particular domain name
@@ -145,15 +141,13 @@ func (h handler) listSecretHandler(w http.ResponseWriter, r *http.Request) {
 		secList,
 	}
 
-	jdata, err := json.Marshal(retStruct)
+	w.Header().Set("Content-Type", "application/json")
+	err = json.NewEncoder(w).Encode(retStruct)
 	if err != nil {
 		smslogger.WriteError(err.Error())
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-
-	w.Header().Set("Content-Type", "application/json")
-	w.Write(jdata)
 }
 
 // deleteSecretHandler handles deleting a secret by given domain name and secret name
@@ -172,11 +166,6 @@ func (h handler) deleteSecretHandler(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNoContent)
 }
 
-// struct that tracks various status items for SMS and backend
-type backendStatus struct {
-	Seal bool `json:"sealstatus"`
-}
-
 // statusHandler returns information related to SMS and SMS backend services
 func (h handler) statusHandler(w http.ResponseWriter, r *http.Request) {
 	s, err := h.secretBackend.GetStatus()
@@ -186,16 +175,19 @@ func (h handler) statusHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	status := backendStatus{Seal: s}
-	jdata, err := json.Marshal(status)
+	status := struct {
+		Seal bool `json:"sealstatus"`
+	}{
+		s,
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	err = json.NewEncoder(w).Encode(status)
 	if err != nil {
 		smslogger.WriteError(err.Error())
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-
-	w.Header().Set("Content-Type", "application/json")
-	w.Write(jdata)
 }
 
 // loginHandler handles login via password and username
@@ -229,6 +221,51 @@ func (h handler) unsealHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// registerHandler allows the quorum clients to register with SMS
+// with their PGP public keys that are then used by sms for backend
+// initialization
+func (h handler) registerHandler(w http.ResponseWriter, r *http.Request) {
+	// Get shards to be used for unseal
+	type registerStruct struct {
+		PGPKey   string `json:"pgpkey"`
+		QuorumID string `json:"quorumid"`
+	}
+
+	smslogger.WriteInfo("Entering registerHandler")
+
+	var inp registerStruct
+	decoder := json.NewDecoder(r.Body)
+	decoder.DisallowUnknownFields()
+	err := decoder.Decode(&inp)
+	if err != nil {
+		smslogger.WriteError(err.Error())
+		http.Error(w, "Bad input JSON", http.StatusBadRequest)
+		return
+	}
+
+	sh, err := h.secretBackend.RegisterQuorum(inp.PGPKey)
+	if err != nil {
+		smslogger.WriteError(err.Error())
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	// Creating a struct for return data
+	shStruct := struct {
+		Shard string `json:"shard"`
+	}{
+		sh,
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	err = json.NewEncoder(w).Encode(shStruct)
+	if err != nil {
+		smslogger.WriteError("Unable to encode response: " + err.Error())
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+}
+
 // CreateRouter returns an http.Handler for the registered URLs
 // Takes an interface implementation as input
 func CreateRouter(b smsbackend.SecretBackend) http.Handler {
@@ -241,8 +278,9 @@ func CreateRouter(b smsbackend.SecretBackend) http.Handler {
 
 	// Initialization APIs which will be used by quorum client
 	// to unseal and to provide root token to sms service
-	router.HandleFunc("/v1/sms/status", h.statusHandler).Methods("GET")
-	router.HandleFunc("/v1/sms/unseal", h.unsealHandler).Methods("POST")
+	router.HandleFunc("/v1/sms/quorum/status", h.statusHandler).Methods("GET")
+	router.HandleFunc("/v1/sms/quorum/unseal", h.unsealHandler).Methods("POST")
+	router.HandleFunc("/v1/sms/quorum/register", h.registerHandler).Methods("POST")
 
 	router.HandleFunc("/v1/sms/domain", h.createSecretDomainHandler).Methods("POST")
 	router.HandleFunc("/v1/sms/domain/{domName}", h.deleteSecretDomainHandler).Methods("DELETE")

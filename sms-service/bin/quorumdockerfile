@@ -4,6 +4,8 @@ LABEL name="aaf-sms-quorumclient"
 LABEL version=1.0.0
 LABEL maintainer="Girish Havaldar <hg0071052@techmahindra.com>"
 
+RUN mkdir -p /quorumclient/auth
 ADD quorumclient /quorumclient/bin/quorumclient
 RUN chmod +x /quorumclient/bin/quorumclient
+
 ENTRYPOINT ["/quorumclient/bin/quorumclient"]

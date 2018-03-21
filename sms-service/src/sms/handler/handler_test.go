@@ -47,6 +47,10 @@ func (b *TestBackend) Unseal(shard string) error {
 	return nil
 }
 
+func (b *TestBackend) RegisterQuorum(pgpkey string) (string, error) {
+	return "", nil
+}
+
 func (b *TestBackend) GetSecret(dom string, sec string) (smsbackend.Secret, error) {
 	return smsbackend.Secret{
 		Name: "testsecret",
@@ -107,8 +111,12 @@ func TestStatusHandler(t *testing.T) {
 			ret, http.StatusOK)
 	}
 
-	expected := backendStatus{}
-	got := backendStatus{}
+	expected := struct {
+		Seal bool `json:"sealstatus"`
+	}{}
+	got := struct {
+		Seal bool `json:"sealstatus"`
+	}{}
 	expectedStr := strings.NewReader(`{"sealstatus":true}`)
 	json.NewDecoder(expectedStr).Decode(&expected)
 	json.NewDecoder(rr.Body).Decode(&got)

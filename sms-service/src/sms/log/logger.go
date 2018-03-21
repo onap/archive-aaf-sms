@@ -27,6 +27,13 @@ var infoLogger *log.Logger
 
 // Init will be called by sms.go before any other packages use it
 func Init(filePath string) {
+	if filePath == "" {
+		errLogger = log.New(os.Stderr, "ERROR: ", log.Lshortfile|log.LstdFlags)
+		warnLogger = log.New(os.Stdout, "WARNING: ", log.Lshortfile|log.LstdFlags)
+		infoLogger = log.New(os.Stdout, "INFO: ", log.Lshortfile|log.LstdFlags)
+		return
+	}
+
 	f, err := os.Create(filePath)
 	if err != nil {
 		log.Println("Unable to create a log file")

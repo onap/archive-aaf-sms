@@ -19,8 +19,8 @@ package main
 import (
 	"crypto/tls"
 	"crypto/x509"
-	"encoding/base64"
 	"encoding/json"
+	uuid "github.com/hashicorp/go-uuid"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -31,11 +31,72 @@ import (
 	"time"
 )
 
+func loadPGPKeys(prKeyPath string, pbKeyPath string) (string, string, error) {
+
+	var pbkey, prkey string
+	generated := false
+	prkey, err := smsauth.ReadFromFile(prKeyPath)
+	if err != nil {
+		smslogger.WriteWarn("No Private Key found. Generating...")
+		pbkey, prkey, _ = smsauth.GeneratePGPKeyPair()
+		generated = true
+	} else {
+		pbkey, err = smsauth.ReadFromFile(pbKeyPath)
+		if err != nil {
+			smslogger.WriteWarn("No Public Key found. Generating...")
+			pbkey, prkey, _ = smsauth.GeneratePGPKeyPair()
+			generated = true
+		}
+	}
+
+	// Storing the keys to file to allow for recovery during restarts
+	if generated {
+		smsauth.WriteToFile(prkey, prKeyPath)
+		smsauth.WriteToFile(pbkey, pbKeyPath)
+	}
+
+	return pbkey, prkey, nil
+
+}
+
 //This application checks the backend status and
 //calls necessary initialization endpoints on the
 //SMS webservice
 func main() {
-	smslogger.Init("quorumclient.log")
+	idFilePath := "auth/myid"
+	pbKeyPath := "auth/pbkey"
+	prKeyPath := "auth/prkey"
+	shardPath := "auth/shard"
+
+	smslogger.Init("")
+	smslogger.WriteInfo("Starting Log for Quorum Client")
+
+	/*
+		myID is used to uniquely identify the quorum client
+		Using any other information such as hostname is not
+		guaranteed to be unique.
+		In Kubernetes, pod restarts will also change the hostname
+	*/
+	myID, err := smsauth.ReadFromFile(idFilePath)
+	if err != nil {
+		smslogger.WriteWarn("Unable to find an ID for this client. Generating...")
+		myID, _ = uuid.GenerateUUID()
+		smsauth.WriteToFile(myID, idFilePath)
+	}
+
+	/*
+		readMyShard will read the shard from disk when this client
+		instance restarts. It will return err when a shard is not found.
+		This is the case for first startup
+	*/
+	registrationDone := true
+	myShard, err := smsauth.ReadFromFile(shardPath)
+	if err != nil {
+		smslogger.WriteWarn("Unable to find a shard file. Registering with SMS...")
+		registrationDone = false
+	}
+
+	pbkey, prkey, _ := loadPGPKeys(prKeyPath, pbKeyPath)
 
 	//Struct to read json configuration file
 	type config struct {
@@ -43,7 +104,6 @@ func main() {
 		CAFile     string `json:"cafile"`
 		ClientCert string `json:"clientcert"`
 		ClientKey  string `json:"clientkey"`
-		B64Key     string `json:"key"`
 		TimeOut    string `json:"timeout"`
 		DisableTLS bool   `json:"disable_tls"`
 	}
@@ -55,15 +115,14 @@ func main() {
 	}
 
 	cfg := config{}
-	decoder := json.NewDecoder(vcf)
-	err = decoder.Decode(&cfg)
+	err = json.NewDecoder(vcf).Decode(&cfg)
 	if err != nil {
 		log.Fatalf("Error while parsing config file %v", err)
 	}
 
 	transport := http.Transport{}
 
-	if cfg.DisableTLS {
+	if cfg.DisableTLS == false {
 		// Read the CA cert. This can be the self-signed CA
 		// or CA cert provided by AAF
 		caCert, err := ioutil.ReadFile(cfg.CAFile)
@@ -75,14 +134,16 @@ func main() {
 		caCertPool.AppendCertsFromPEM(caCert)
 
 		// Load the client certificate files
-		cert, err := tls.LoadX509KeyPair(cfg.ClientCert, cfg.ClientKey)
-		if err != nil {
-			log.Fatalf("Error while loading key pair %v ", err)
-		}
+		//cert, err := tls.LoadX509KeyPair(cfg.ClientCert, cfg.ClientKey)
+		//if err != nil {
+		//	log.Fatalf("Error while loading key pair %v ", err)
+		//}
 
 		transport.TLSClientConfig = &tls.Config{
-			RootCAs:      caCertPool,
-			Certificates: []tls.Certificate{cert},
+			MinVersion: tls.VersionTLS12,
+			RootCAs:    caCertPool,
+			//Enable once we have proper client certificates
+			//Certificates: []tls.Certificate{cert},
 		}
 	}
 
@@ -90,36 +151,50 @@ func main() {
 		Transport: &transport,
 	}
 
-	smsauth.GeneratePGPKeyPair()
-
 	duration, _ := time.ParseDuration(cfg.TimeOut)
 	ticker := time.NewTicker(duration)
 
 	for _ = range ticker.C {
 
 		//URL and Port is configured in config file
-		response, err := client.Get(cfg.BackEndURL + "/v1/sms/status")
+		response, err := client.Get(cfg.BackEndURL + "/v1/sms/quorum/status")
 		if err != nil {
-			log.Fatalf("Error while connecting to SMS webservice %v", err)
+			smslogger.WriteError("Unable to connect to SMS. Retrying...")
+			continue
 		}
 
-		responseData, err := ioutil.ReadAll(response.Body)
-		if err != nil {
-			log.Fatalf("Error while reading response %v", err)
+		var data struct {
+			Seal bool `json:"sealstatus"`
 		}
+		err = json.NewDecoder(response.Body).Decode(&data)
 
-		var data map[string]interface{}
-		json.Unmarshal(responseData, &data)
-		sealed := data["sealed"].(bool)
+		sealed := data.Seal
 
 		// Unseal the vault if sealed
 		if sealed {
-			decdB64Key, _ := base64.StdEncoding.DecodeString(cfg.B64Key)
-			body := strings.NewReader(`{"key":"` + string(decdB64Key) + `"}`)
+			//Register with SMS if not already done so
+			if !registrationDone {
+				body := strings.NewReader(`{"pgpkey":"` + pbkey + `","quorumid":"` + myID + `"}`)
+				res, err := client.Post(cfg.BackEndURL+"/v1/sms/quorum/register", "application/json", body)
+				if err != nil {
+					smslogger.WriteError("Ran into error during registration. Retrying...")
+					continue
+				}
+				registrationDone = true
+				var data struct {
+					Shard string `json:"shard"`
+				}
+				json.NewDecoder(res.Body).Decode(&data)
+				myShard = data.Shard
+				smsauth.WriteToFile(myShard, shardPath)
+			}
+
+			decShard, err := smsauth.DecryptPGPString(myShard, prkey)
+			body := strings.NewReader(`{"unsealshard":"` + decShard + `"}`)
 			//URL and PORT is configured via config file
-			response, err = client.Post(cfg.BackEndURL+"/v1/sms/unseal", "application/json", body)
+			response, err = client.Post(cfg.BackEndURL+"/v1/sms/quorum/unseal", "application/json", body)
 			if err != nil {
-				log.Fatalf("Error while unsealing %v", err)
+				smslogger.WriteError("Error unsealing vault. Retrying... " + err.Error())
 			}
 		}
 	}

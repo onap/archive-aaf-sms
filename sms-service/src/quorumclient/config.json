@@ -1,9 +1,7 @@
 {
-    "url":"https://localhost:10443/",
-    "cafile": "selfsignedca.pem",
-    "clientcert":"client.crt",
+    "url":"https://aaf-sms:10443",
+    "cafile": "auth/selfsignedca.pem",
+    "clientcert":"client.cert",
     "clientkey":"client.key",
-    "key":"UHFFY0l6WDhZVlErbGxvWitFVWpUL3FCV083NXRra1B2TDVBblN4VE5mYz0=",
-    "timeout":"60s",
-    "disable_tls":false
+    "timeout":"10s"
 }
