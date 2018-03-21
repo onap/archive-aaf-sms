@@ -32,7 +32,7 @@ import (
 
 func main() {
 	// Initialize logger
-	smslogger.Init("sms.log")
+	smslogger.Init("")
 
 	// Read Configuration File
 	smsConf, err := smsconfig.ReadConfigFile("smsconfig.json")
