@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5a93c517_becffab2",
+        "filename": "sms-service/bin/Dockerfile",
+        "patchSetId": 2
+      },
+      "lineNbr": 10,
+      "author": {
+        "id": 991
+      },
+      "writtenOn": "2018-03-22T22:20:58Z",
+      "side": 1,
+      "message": "Is this used anywhere?",
+      "revId": "721cdc85d67160abdfa227c80282ba5afa5b6c0e",
+      "serverId": "14b4e41f-c4e3-4fb9-9955-6a9b5656895a",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5a93c517_ded44649",
+        "filename": "sms-service/bin/Dockerfile",
+        "patchSetId": 2
+      },
+      "lineNbr": 12,
+      "author": {
+        "id": 991
+      },
+      "writtenOn": "2018-03-22T22:20:58Z",
+      "side": 1,
+      "message": "I think its already executable when it gets generated. Why do again and add extra layer?",
+      "revId": "721cdc85d67160abdfa227c80282ba5afa5b6c0e",
+      "serverId": "14b4e41f-c4e3-4fb9-9955-6a9b5656895a",
+      "unresolved": false
+    }
+  ]
+}
