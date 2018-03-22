@@ -22,6 +22,7 @@ import (
 	"crypto/x509"
 	"encoding/base64"
 	"golang.org/x/crypto/openpgp"
+	"golang.org/x/crypto/openpgp/packet"
 	"io/ioutil"
 
 	smslogger "sms/log"
@@ -92,4 +93,39 @@ func GeneratePGPKeyPair() (string, string, error) {
 	prkey := base64.StdEncoding.EncodeToString(buffer.Bytes())
 
 	return pbkey, prkey, nil
+}
+
+// DecryptPGPBytes decrypts a PGP encoded input string and returns
+// a base64 representation of the decoded string
+func DecryptPGPBytes(data string, prKey string) (string, error) {
+	// Convert private key to bytes from base64
+	prKeyBytes, err := base64.StdEncoding.DecodeString(prKey)
+	if err != nil {
+		smslogger.WriteError("Error Decoding base64 private key: " + err.Error())
+		return "", err
+	}
+
+	dataBytes, err := base64.StdEncoding.DecodeString(data)
+	if err != nil {
+		smslogger.WriteError("Error Decoding base64 data: " + err.Error())
+		return "", err
+	}
+
+	prEntity, err := openpgp.ReadEntity(packet.NewReader(bytes.NewBuffer(prKeyBytes)))
+	if err != nil {
+		smslogger.WriteError("Error reading entity from PGP key: " + err.Error())
+		return "", err
+	}
+
+	prEntityList := &openpgp.EntityList{prEntity}
+	message, err := openpgp.ReadMessage(bytes.NewBuffer(dataBytes), prEntityList, nil, nil)
+	if err != nil {
+		smslogger.WriteError("Error Decrypting message: " + err.Error())
+		return "", err
+	}
+
+	var retBuf bytes.Buffer
+	retBuf.ReadFrom(message.UnverifiedBody)
+
+	return retBuf.String(), nil
 }
