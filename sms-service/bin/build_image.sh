@@ -20,6 +20,17 @@ if [ $HTTPS_PROXY ]; then
     BUILD_ARGS+=" --build-arg HTTPS_PROXY=${HTTPS_PROXY}"
 fi
 
+function generate_binary {
+    pushd ../src/sms
+    make build
+    popd
+    cp ../target/sms .
+}
+
+function remove_binary {
+    rm sms
+}
+
 function build_image {
     echo "Start build docker image: ${IMAGE_NAME}"
     docker build ${BUILD_ARGS} -t ${IMAGE_NAME}:latest .
@@ -41,5 +52,7 @@ function push_image {
     push_image_tag ${IMAGE_NAME}:${VERSION}-STAGING-${TIMESTAMP}
 }
 
+generate_binary
 build_image
-#push_image
+push_image
+remove_binary
