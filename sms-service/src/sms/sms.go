@@ -17,8 +17,11 @@
 package main
 
 import (
+	"context"
 	"log"
 	"net/http"
+	"os"
+	"os/signal"
 
 	smsauth "sms/auth"
 	smsbackend "sms/backend"
@@ -56,6 +59,20 @@ func main() {
 		TLSConfig: tlsConfig,
 	}
 
+	// Listener for SIGINT so that it returns cleanly
+	connectionsClose := make(chan struct{})
+	go func() {
+		c := make(chan os.Signal, 1)
+		signal.Notify(c, os.Interrupt)
+		<-c
+		httpServer.Shutdown(context.Background())
+		close(connectionsClose)
+	}()
+
 	err = httpServer.ListenAndServeTLS(smsConf.ServerCert, smsConf.ServerKey)
-	log.Fatal(err)
+	if err != nil && err != http.ErrServerClosed {
+		log.Fatal(err)
+	}
+
+	<-connectionsClose
 }
