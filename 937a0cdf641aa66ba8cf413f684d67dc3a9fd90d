@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5a93c517_b554e621",
+        "filename": "sms-service/doc/coverage.html",
+        "patchSetId": 1
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 991
+      },
+      "writtenOn": "2018-03-26T23:56:05Z",
+      "side": 1,
+      "message": "You sure you wanna add this? This keeps changing right?",
+      "revId": "937a0cdf641aa66ba8cf413f684d67dc3a9fd90d",
+      "serverId": "14b4e41f-c4e3-4fb9-9955-6a9b5656895a",
+      "unresolved": false
+    }
+  ]
+}
