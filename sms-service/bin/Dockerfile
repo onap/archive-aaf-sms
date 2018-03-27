@@ -1,5 +1,4 @@
 FROM alpine:3.7
-MAINTAINER aaf-sms
 
 LABEL name="aaf-sms"
 LABEL version=1.0.0
@@ -7,7 +6,7 @@ LABEL maintainer="vamshi krishna <vn00480215@techmahindra.com>"
 
 EXPOSE 10443
 
-RUN mkdir -p /sms/auth
+RUN mkdir /sms
 ADD sms /sms/bin/sms
 RUN chmod +x /sms/bin/sms
 

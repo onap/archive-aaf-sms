@@ -1,3 +1,5 @@
 pkg/
+target/
+src/github.com/
 src/sms/.vscode/
 src/sms/vendor/
