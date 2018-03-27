@@ -16,6 +16,24 @@
       "revId": "937a0cdf641aa66ba8cf413f684d67dc3a9fd90d",
       "serverId": "14b4e41f-c4e3-4fb9-9955-6a9b5656895a",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5a93c517_d50bb229",
+        "filename": "sms-service/doc/coverage.html",
+        "patchSetId": 1
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 301
+      },
+      "writtenOn": "2018-03-27T00:01:48Z",
+      "side": 1,
+      "message": "Yes. It will keep changing and I will update it as and when the change happens. This is just a way to track the ongoing coverage data in some place.",
+      "parentUuid": "5a93c517_b554e621",
+      "revId": "937a0cdf641aa66ba8cf413f684d67dc3a9fd90d",
+      "serverId": "14b4e41f-c4e3-4fb9-9955-6a9b5656895a",
+      "unresolved": false
     }
   ]
 }
