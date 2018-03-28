@@ -31,6 +31,7 @@ type SMSConfiguration struct {
 
 	VaultAddress string `json:"vaultaddress"`
 	VaultToken   string `json:"vaulttoken"`
+	DisableTLS   bool   `json:"disable_tls"`
 }
 
 // SMSConfig is the structure that stores the configuration
@@ -45,7 +46,8 @@ func ReadConfigFile(file string) (*SMSConfiguration, error) {
 		}
 		defer f.Close()
 
-		SMSConfig = &SMSConfiguration{}
+		// Default behaviour is to enable TLS
+		SMSConfig = &SMSConfiguration{DisableTLS: false}
 		decoder := json.NewDecoder(f)
 		err = decoder.Decode(SMSConfig)
 		if err != nil {

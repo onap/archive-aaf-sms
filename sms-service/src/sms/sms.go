@@ -47,16 +47,9 @@ func main() {
 
 	httpRouter := smshandler.CreateRouter(backendImpl)
 
-	// TODO: Use CA certificate from AAF
-	tlsConfig, err := smsauth.GetTLSConfig(smsConf.CAFile)
-	if err != nil {
-		log.Fatal(err)
-	}
-
 	httpServer := &http.Server{
-		Handler:   httpRouter,
-		Addr:      ":10443",
-		TLSConfig: tlsConfig,
+		Handler: httpRouter,
+		Addr:    ":10443",
 	}
 
 	// Listener for SIGINT so that it returns cleanly
@@ -69,7 +62,21 @@ func main() {
 		close(connectionsClose)
 	}()
 
-	err = httpServer.ListenAndServeTLS(smsConf.ServerCert, smsConf.ServerKey)
+	// Start in TLS mode by default
+	if smsConf.DisableTLS == true {
+		smslogger.WriteWarn("TLS is Disabled")
+		err = httpServer.ListenAndServe()
+	} else {
+		// TODO: Use CA certificate from AAF
+		tlsConfig, err := smsauth.GetTLSConfig(smsConf.CAFile)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		httpServer.TLSConfig = tlsConfig
+		err = httpServer.ListenAndServeTLS(smsConf.ServerCert, smsConf.ServerKey)
+	}
+
 	if err != nil && err != http.ErrServerClosed {
 		log.Fatal(err)
 	}

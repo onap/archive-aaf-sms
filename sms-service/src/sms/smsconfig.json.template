@@ -4,5 +4,6 @@
     "serverkey":  "auth/server.key",
 
     "vaultaddress":     "http://localhost:8200",
-    "vaulttoken":       "f56d2c0e-d58d-2be2-aed4-bb9931bedad2"
+    "vaulttoken":       "f56d2c0e-d58d-2be2-aed4-bb9931bedad2",
+    "disable_tls": false
 }
