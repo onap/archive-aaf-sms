@@ -168,6 +168,8 @@ func (h handler) deleteSecretHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+
+	w.WriteHeader(http.StatusNoContent)
 }
 
 // struct that tracks various status items for SMS and backend
