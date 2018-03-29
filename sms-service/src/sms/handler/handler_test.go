@@ -199,7 +199,7 @@ func TestDeleteSecretHandler(t *testing.T) {
 	hr := http.HandlerFunc(h.deleteSecretHandler)
 
 	hr.ServeHTTP(rr, req)
-	if rr.Code != http.StatusOK {
+	if rr.Code != http.StatusNoContent {
 		t.Errorf("Expected statusCreated return code. Got: %v", rr.Code)
 	}
 }
