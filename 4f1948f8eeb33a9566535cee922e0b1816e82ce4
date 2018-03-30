@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5a93c517_82186585",
+        "filename": "sms-quorum/src/smsquorum/Makefile",
+        "patchSetId": 1
+      },
+      "lineNbr": 4,
+      "author": {
+        "id": 301
+      },
+      "writtenOn": "2018-03-30T17:09:18Z",
+      "side": 1,
+      "message": "Remove. We can add it later if we use any external packages.",
+      "range": {
+        "startLine": 4,
+        "startChar": 0,
+        "endLine": 4,
+        "endChar": 46
+      },
+      "revId": "4f1948f8eeb33a9566535cee922e0b1816e82ce4",
+      "serverId": "14b4e41f-c4e3-4fb9-9955-6a9b5656895a",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5a93c517_e229299c",
+        "filename": "sms-quorum/src/smsquorum/Makefile",
+        "patchSetId": 1
+      },
+      "lineNbr": 20,
+      "author": {
+        "id": 301
+      },
+      "writtenOn": "2018-03-30T17:09:18Z",
+      "side": 1,
+      "message": "Remove comment",
+      "range": {
+        "startLine": 20,
+        "startChar": 6,
+        "endLine": 20,
+        "endChar": 11
+      },
+      "revId": "4f1948f8eeb33a9566535cee922e0b1816e82ce4",
+      "serverId": "14b4e41f-c4e3-4fb9-9955-6a9b5656895a",
+      "unresolved": false
+    }
+  ]
+}
