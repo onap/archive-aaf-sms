@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5a93c517_c2574d25",
+        "filename": "sms-quorum/bin/Dockerfile",
+        "patchSetId": 2
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 301
+      },
+      "writtenOn": "2018-03-30T17:11:06Z",
+      "side": 1,
+      "message": "Remove these lines instead of commenting it.",
+      "range": {
+        "startLine": 6,
+        "startChar": 0,
+        "endLine": 7,
+        "endChar": 13
+      },
+      "revId": "766b526ceb5afa3f1725d708948d4dd006188be7",
+      "serverId": "14b4e41f-c4e3-4fb9-9955-6a9b5656895a",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5a93c517_e2528934",
+        "filename": "sms-quorum/bin/Dockerfile",
+        "patchSetId": 2
+      },
+      "lineNbr": 10,
+      "author": {
+        "id": 301
+      },
+      "writtenOn": "2018-03-30T17:11:06Z",
+      "side": 1,
+      "message": "Same as before",
+      "range": {
+        "startLine": 9,
+        "startChar": 0,
+        "endLine": 10,
+        "endChar": 23
+      },
+      "revId": "766b526ceb5afa3f1725d708948d4dd006188be7",
+      "serverId": "14b4e41f-c4e3-4fb9-9955-6a9b5656895a",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5a93c517_8231450d",
+        "filename": "sms-quorum/bin/Dockerfile",
+        "patchSetId": 2
+      },
+      "lineNbr": 13,
+      "author": {
+        "id": 301
+      },
+      "writtenOn": "2018-03-30T17:11:06Z",
+      "side": 1,
+      "message": "Same",
+      "range": {
+        "startLine": 13,
+        "startChar": 0,
+        "endLine": 13,
+        "endChar": 39
+      },
+      "revId": "766b526ceb5afa3f1725d708948d4dd006188be7",
+      "serverId": "14b4e41f-c4e3-4fb9-9955-6a9b5656895a",
+      "unresolved": false
+    }
+  ]
+}
