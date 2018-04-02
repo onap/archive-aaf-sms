@@ -28,7 +28,7 @@ func init() {
 }
 
 func TestInit(t *testing.T) {
-	smsconfig.SMSConfig = &smsconfig.SMSConfiguration{VaultAddress: "http://localhost:8200"}
+	smsconfig.SMSConfig = &smsconfig.SMSConfiguration{BackendAddress: "http://localhost:8200"}
 	v.Init()
 	if v.vaultClient == nil {
 		t.Fatal("Init: Init() failed to create vaultClient")

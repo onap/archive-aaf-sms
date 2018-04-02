@@ -23,7 +23,7 @@ import (
 
 func TestInitSecretBackend(t *testing.T) {
 	smsconfig.SMSConfig = &smsconfig.SMSConfiguration{
-		VaultAddress: "http://localhost:8200",
+		BackendAddress: "http://localhost:8200",
 	}
 	sec, err := InitSecretBackend()
 	// We expect an error to be returned as Init expects

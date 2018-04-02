@@ -19,6 +19,7 @@ package config
 import (
 	"encoding/json"
 	"os"
+	smslogger "sms/log"
 )
 
 // SMSConfiguration loads up all the values that are used to configure
@@ -29,9 +30,10 @@ type SMSConfiguration struct {
 	ServerCert string `json:"servercert"`
 	ServerKey  string `json:"serverkey"`
 
-	VaultAddress string `json:"vaultaddress"`
-	VaultToken   string `json:"vaulttoken"`
-	DisableTLS   bool   `json:"disable_tls"`
+	BackendAddress            string `json:"smsdbaddress"`
+	VaultToken                string `json:"vaulttoken"`
+	DisableTLS                bool   `json:"disable_tls"`
+	BackendAddressEnvVariable string `json:"smsdburlenv"`
 }
 
 // SMSConfig is the structure that stores the configuration
@@ -52,6 +54,12 @@ func ReadConfigFile(file string) (*SMSConfiguration, error) {
 		err = decoder.Decode(SMSConfig)
 		if err != nil {
 			return nil, err
+		}
+
+		if SMSConfig.BackendAddress == "" && SMSConfig.BackendAddressEnvVariable != "" {
+			// Get the value from ENV variable
+			smslogger.WriteInfo("Using Environment Variable: " + SMSConfig.BackendAddressEnvVariable)
+			SMSConfig.BackendAddress = os.Getenv(SMSConfig.BackendAddressEnvVariable)
 		}
 	}
 

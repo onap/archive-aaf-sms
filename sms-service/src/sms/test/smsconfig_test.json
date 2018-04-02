@@ -3,5 +3,7 @@
     "servercert": "testserver.cert",
     "serverkey": "testserver.key",
 
-    "vaultaddress": "http://localhost:8200"
+    "smsdbaddress":     "http://localhost:8200",
+    "vaulttoken":       "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee",
+    "smsdburlenv" :     "SMSDB_URL"
 }

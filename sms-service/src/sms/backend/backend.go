@@ -54,7 +54,7 @@ type SecretBackend interface {
 // InitSecretBackend returns an interface implementation
 func InitSecretBackend() (SecretBackend, error) {
 	backendImpl := &Vault{
-		vaultAddress: smsconfig.SMSConfig.VaultAddress,
+		vaultAddress: smsconfig.SMSConfig.BackendAddress,
 		vaultToken:   smsconfig.SMSConfig.VaultToken,
 	}
 
