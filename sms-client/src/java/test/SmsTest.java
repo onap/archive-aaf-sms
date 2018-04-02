@@ -46,18 +46,30 @@ public class SmsTest extends SmsClient {
         Map<String, Object> m;
         SmsResponse resp = new SmsResponse();
         System.out.println(t);
-        if ( t.matches("(.*)/v1/sms/domain"))
 
-        {
-            resp.setSuccess(true);
-            resp.setResponseCode(200);
-            try {
-                m = strtomap(ins);
-            } catch ( Exception e ) {
-                resp.setResponse(null);
-                return(resp);
-            }
-            resp.setResponse(m);
+        switch ( reqtype ) {
+            case "POST":
+                if ( t.matches("(.*)/v1/sms/domain")) {
+                    resp.setSuccess(true);
+                    resp.setResponseCode(201);
+                    try {
+                        m = strtomap(ins);
+                    } catch ( Exception e ) {
+                        resp.setResponse(null);
+                        return(resp);
+                    }
+                    resp.setResponse(m);
+                }
+            break;
+            case "DELETE":
+                if ( t.matches("(.*)/v1/sms/domain/(.*)") ) {
+                    // for both delete domain & secret case
+                    resp.setSuccess(true);
+                    resp.setResponseCode(204);
+                    resp.setResponse(null);
+                }
+            break;
+
         }
         return resp;
     }
