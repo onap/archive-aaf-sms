@@ -21,7 +21,8 @@ import org.junit.runner.notification.Failure;
 public class ClientTestRunner {
     public static void main(String[] args) {
         Result r = JUnitCore.runClasses(
-            SmsCreateDomainTest.class
+            SmsCreateDomainTest.class,
+            SmsDeleteDomainTest.class
         );
 
         for( Failure f : r.getFailures()) {
