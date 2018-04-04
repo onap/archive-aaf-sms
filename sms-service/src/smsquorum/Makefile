@@ -16,7 +16,7 @@ clean:
 	go clean
 	rm -f $(GOPATH)/target/$(BINARY)
 
-test: 
+test:
 	@echo "Yet to Implement"
 
 format:
