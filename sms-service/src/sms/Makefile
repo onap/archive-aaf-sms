@@ -1,4 +1,4 @@
-GOPATH := $(shell realpath "$(PWD)/../../")
+GOPATH := $(shell realpath "$(CURDIR)/../../")
 BINARY := sms
 PLATFORM := linux
 DEPENDENCIES := github.com/golang/dep/cmd/dep
