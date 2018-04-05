@@ -1,4 +1,4 @@
-GOPATH := $(shell realpath "$(PWD)/../../")
+GOPATH := $(shell realpath "$(CURDIR)/../../")
 BINARY := quorumclient
 PLATFORM := linux
 
