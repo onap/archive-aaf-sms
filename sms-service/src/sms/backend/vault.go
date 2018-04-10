@@ -32,20 +32,17 @@ import (
 // Vault is the main Struct used in Backend to initialize the struct
 type Vault struct {
 	sync.Mutex
-	engineType        string
-	initRoleDone      bool
-	policyName        string
-	roleID            string
-	secretID          string
-	vaultAddress      string
-	vaultClient       *vaultapi.Client
-	vaultMount        string
-	vaultTempTokenTTL time.Time
-	vaultToken        string
-	unsealShards      []string
-	rootToken         string
-	pgpPub            string
-	pgpPr             string
+	initRoleDone          bool
+	policyName            string
+	roleID                string
+	secretID              string
+	vaultAddress          string
+	vaultClient           *vaultapi.Client
+	vaultMountPrefix      string
+	internalDomain        string
+	internalDomainMounted bool
+	vaultTempTokenTTL     time.Time
+	vaultToken            string
 }
 
 // Init will initialize the vault connection
@@ -60,11 +57,12 @@ func (v *Vault) Init() error {
 		return errors.New("Unable to create new vault client")
 	}
 
-	v.engineType = "kv"
 	v.initRoleDone = false
 	v.policyName = "smsvaultpolicy"
 	v.vaultClient = client
-	v.vaultMount = "sms"
+	v.vaultMountPrefix = "sms"
+	v.internalDomain = "smsinternaldomain"
+	v.internalDomainMounted = false
 
 	err = v.initRole()
 	if err != nil {
@@ -83,7 +81,6 @@ func (v *Vault) GetStatus() (bool, error) {
 		smslogger.WriteError(err.Error())
 		return false, errors.New("Error getting status")
 	}
-
 	return sealStatus.Sealed, nil
 }
 
@@ -110,7 +107,7 @@ func (v *Vault) GetSecret(dom string, name string) (Secret, error) {
 		return Secret{}, errors.New("Token check failed")
 	}
 
-	dom = v.vaultMount + "/" + dom
+	dom = v.vaultMountPrefix + "/" + dom
 
 	sec, err := v.vaultClient.Logical().Read(dom + "/" + name)
 	if err != nil {
@@ -136,7 +133,7 @@ func (v *Vault) ListSecret(dom string) ([]string, error) {
 		return nil, errors.New("Token check failed")
 	}
 
-	dom = v.vaultMount + "/" + dom
+	dom = v.vaultMountPrefix + "/" + dom
 
 	sec, err := v.vaultClient.Logical().List(dom)
 	if err != nil {
@@ -164,6 +161,70 @@ func (v *Vault) ListSecret(dom string) ([]string, error) {
 	return retval, nil
 }
 
+// Mounts the internal Domain if its not already mounted
+func (v *Vault) mountInternalDomain(name string) error {
+	if v.internalDomainMounted {
+		return nil
+	}
+
+	name = strings.TrimSpace(name)
+	mountPath := v.vaultMountPrefix + "/" + name
+	mountInput := &vaultapi.MountInput{
+		Type:        "kv",
+		Description: "Mount point for domain: " + name,
+		Local:       false,
+		SealWrap:    false,
+		Config:      vaultapi.MountConfigInput{},
+	}
+
+	err := v.vaultClient.Sys().Mount(mountPath, mountInput)
+	if err != nil {
+		if strings.Contains(err.Error(), "existing mount") {
+			// It is already mounted
+			v.internalDomainMounted = true
+			return nil
+		}
+		// Ran into some other error mounting it.
+		smslogger.WriteError(err.Error())
+		return errors.New("Unable to mount internal Domain")
+	}
+
+	v.internalDomainMounted = true
+	return nil
+}
+
+// Stores the UUID created for secretdomain in vault
+// under v.vaultMountPrefix / smsinternal domain
+func (v *Vault) storeUUID(uuid string, name string) error {
+	// Check if token is still valid
+	err := v.checkToken()
+	if err != nil {
+		smslogger.WriteError(err.Error())
+		return errors.New("Token Check failed")
+	}
+
+	err = v.mountInternalDomain(v.internalDomain)
+	if err != nil {
+		smslogger.WriteError("Could not mount internal domain")
+		return err
+	}
+
+	secret := Secret{
+		Name: name,
+		Values: map[string]interface{}{
+			"uuid": uuid,
+		},
+	}
+
+	err = v.CreateSecret(v.internalDomain, secret)
+	if err != nil {
+		smslogger.WriteError("Unable to write UUID to internal domain")
+		return err
+	}
+
+	return nil
+}
+
 // CreateSecretDomain mounts the kv backend on a path with the given name
 func (v *Vault) CreateSecretDomain(name string) (SecretDomain, error) {
 	// Check if token is still valid
@@ -174,9 +235,9 @@ func (v *Vault) CreateSecretDomain(name string) (SecretDomain, error) {
 	}
 
 	name = strings.TrimSpace(name)
-	mountPath := v.vaultMount + "/" + name
+	mountPath := v.vaultMountPrefix + "/" + name
 	mountInput := &vaultapi.MountInput{
-		Type:        v.engineType,
+		Type:        "kv",
 		Description: "Mount point for domain: " + name,
 		Local:       false,
 		SealWrap:    false,
@@ -190,6 +251,15 @@ func (v *Vault) CreateSecretDomain(name string) (SecretDomain, error) {
 	}
 
 	uuid, _ := uuid.GenerateUUID()
+	err = v.storeUUID(uuid, name)
+	if err != nil {
+		// Mount was successful at this point.
+		// Rollback the mount operation since we could not
+		// store the UUID for the mount.
+		v.vaultClient.Sys().Unmount(mountPath)
+		return SecretDomain{}, errors.New("Unable to store Secret Domain UUID. Retry.")
+	}
+
 	return SecretDomain{uuid, name}, nil
 }
 
@@ -202,7 +272,7 @@ func (v *Vault) CreateSecret(dom string, sec Secret) error {
 		return errors.New("Token check failed")
 	}
 
-	dom = v.vaultMount + "/" + dom
+	dom = v.vaultMountPrefix + "/" + dom
 
 	// Vault return is empty on successful write
 	// TODO: Check if values is not empty
@@ -225,7 +295,7 @@ func (v *Vault) DeleteSecretDomain(name string) error {
 	}
 
 	name = strings.TrimSpace(name)
-	mountPath := v.vaultMount + "/" + name
+	mountPath := v.vaultMountPrefix + "/" + name
 
 	err = v.vaultClient.Sys().Unmount(mountPath)
 	if err != nil {
@@ -244,7 +314,7 @@ func (v *Vault) DeleteSecret(dom string, name string) error {
 		return errors.New("Token check failed")
 	}
 
-	dom = v.vaultMount + "/" + dom
+	dom = v.vaultMountPrefix + "/" + dom
 
 	// Vault return is empty on successful delete
 	_, err = v.vaultClient.Logical().Delete(dom + "/" + name)
@@ -270,7 +340,7 @@ func (v *Vault) initRole() error {
 		return errors.New("Unable to create policy for approle creation")
 	}
 
-	rName := v.vaultMount + "-role"
+	rName := v.vaultMountPrefix + "-role"
 	data := map[string]interface{}{
 		"token_ttl": "60m",
 		"policies":  [2]string{"default", v.policyName},
@@ -363,14 +433,12 @@ func (v *Vault) initializeVault() error {
 		SecretThreshold: 3,
 	}
 
-	pbkey, prkey, err := smsauth.GeneratePGPKeyPair()
+	pbkey, _, err := smsauth.GeneratePGPKeyPair()
 	if err != nil {
 		smslogger.WriteError("Error Generating PGP Keys. Vault Init will not use encryption!")
 	} else {
 		initReq.PGPKeys = []string{pbkey, pbkey, pbkey, pbkey, pbkey}
 		initReq.RootTokenPGPKey = pbkey
-		v.pgpPub = pbkey
-		v.pgpPr = prkey
 	}
 
 	resp, err := v.vaultClient.Sys().Init(initReq)
@@ -380,8 +448,8 @@ func (v *Vault) initializeVault() error {
 	}
 
 	if resp != nil {
-		v.unsealShards = resp.KeysB64
-		v.rootToken = resp.RootToken
+		//v.writeUnsealShards(resp.KeysB64)
+		v.vaultToken = resp.RootToken
 		return nil
 	}
 
