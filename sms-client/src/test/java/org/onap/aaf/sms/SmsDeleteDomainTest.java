@@ -14,33 +14,30 @@
  * limitations under the License.
  */
 
+package org.onap.aaf.sms;
+
 import junit.framework.*;
 import org.onap.aaf.sms.SmsClient;
 import org.onap.aaf.sms.SmsResponse;
-import org.onap.aaf.sms.test.SmsSecureSocket;
+import org.onap.aaf.sms.SmsSecureSocket;
 import javax.net.ssl.SSLSocketFactory;
 import java.util.HashMap;
 import java.util.Map;
 
-public class SmsCreateDomainTest extends TestCase {
+public class SmsDeleteDomainTest extends TestCase {
 
-    public void testSmsCreateDomain() {
+    public void testSmsDeleteDomain() {
         try {
-            SmsSecureSocket sss = new SmsSecureSocket();
-
-            SmsTest sms = new SmsTest("otconap4.sc.intel.com", 10443, sss.getSSF());
-            SmsResponse resp = sms.createDomain("onap.new.test.sms0");
+            SmsTest sms = new SmsTest("otconap4.sc.intel.com", 10443, null);
+            SmsResponse resp = sms.deleteDomain("onap.new.test.sms0");
             assertTrue(resp.getSuccess());
             if ( resp.getSuccess() ) {
-                Map<String, Object> m = resp.getResponse();
-                assertNotNull(m);
-                assertEquals(201, resp.getResponseCode());
-                assertEquals("onap.new.test.sms0", m.get("name"));
-            } else {
-                fail("Unexpected response while creating domain");
+                assertEquals(204, resp.getResponseCode());
+            }  else {
+                fail("Unexpected response while deleting domain");
             }
         } catch ( Exception e ) {
-            fail("Exception while creating domain");
+            fail("Exception while deleting domain");
         }
     }
 }
