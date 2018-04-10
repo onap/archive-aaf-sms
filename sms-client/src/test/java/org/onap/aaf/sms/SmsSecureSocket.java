@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.onap.aaf.sms.test;
+package org.onap.aaf.sms;
 
 import java.io.FileInputStream;
 import javax.net.ssl.KeyManagerFactory;
