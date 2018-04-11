@@ -45,7 +45,8 @@ func GetTLSConfig(caCertFile string) (*tls.Config, error) {
 		caCertPool.AppendCertsFromPEM(caCert)
 
 		tlsConfig = &tls.Config{
-			ClientAuth: tls.RequireAndVerifyClientCert,
+			// Change to RequireAndVerify once we have mandatory certs
+			ClientAuth: tls.VerifyClientCertIfGiven,
 			ClientCAs:  caCertPool,
 			MinVersion: tls.VersionTLS12,
 		}
