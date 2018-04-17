@@ -56,6 +56,7 @@ type SecretBackend interface {
 func InitSecretBackend() (SecretBackend, error) {
 	backendImpl := &Vault{
 		vaultAddress: smsconfig.SMSConfig.BackendAddress,
+		vaultToken:   smsconfig.SMSConfig.VaultToken,
 	}
 
 	err := backendImpl.Init()
