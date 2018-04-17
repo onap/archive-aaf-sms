@@ -95,6 +95,10 @@ func (v *Vault) GetStatus() (bool, error) {
 // RegisterQuorum registers the PGP public key for a quorum client
 // We will return a shard to the client that is registering
 func (v *Vault) RegisterQuorum(pgpkey string) (string, error) {
+
+	v.Lock()
+	defer v.Unlock()
+
 	if v.shards == nil {
 		smslogger.WriteError("Invalid operation")
 		return "", errors.New("Invalid operation")

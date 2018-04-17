@@ -25,6 +25,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"path/filepath"
 	smsauth "sms/auth"
 	smslogger "sms/log"
 	"strings"
@@ -63,10 +64,11 @@ func loadPGPKeys(prKeyPath string, pbKeyPath string) (string, string, error) {
 //calls necessary initialization endpoints on the
 //SMS webservice
 func main() {
-	idFilePath := "auth/myid"
-	pbKeyPath := "auth/pbkey"
-	prKeyPath := "auth/prkey"
-	shardPath := "auth/shard"
+	podName := os.Getenv("HOSTNAME")
+	idFilePath := filepath.Join("auth", podName, "id")
+	pbKeyPath := filepath.Join("auth", podName, "pbkey")
+	prKeyPath := filepath.Join("auth", podName, "prkey")
+	shardPath := filepath.Join("auth", podName, "shard")
 
 	smslogger.Init("")
 	smslogger.WriteInfo("Starting Log for Quorum Client")
