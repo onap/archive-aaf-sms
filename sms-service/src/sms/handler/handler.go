@@ -231,8 +231,6 @@ func (h handler) registerHandler(w http.ResponseWriter, r *http.Request) {
 		QuorumID string `json:"quorumid"`
 	}
 
-	smslogger.WriteInfo("Entering registerHandler")
-
 	var inp registerStruct
 	decoder := json.NewDecoder(r.Body)
 	decoder.DisallowUnknownFields()
