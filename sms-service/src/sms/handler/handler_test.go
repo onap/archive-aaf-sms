@@ -95,7 +95,7 @@ func TestCreateRouter(t *testing.T) {
 }
 
 func TestStatusHandler(t *testing.T) {
-	req, err := http.NewRequest("GET", "/v1/sms/status", nil)
+	req, err := http.NewRequest("GET", "/v1/sms/quorum/status", nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -124,6 +124,24 @@ func TestStatusHandler(t *testing.T) {
 	if reflect.DeepEqual(expected, got) == false {
 		t.Errorf("statusHandler returned unexpected body: got %v vs %v",
 			rr.Body.String(), expectedStr)
+	}
+}
+
+func TestUnsealHandler(t *testing.T) {
+	req, err := http.NewRequest("GET", "/v1/sms/quorum/unseal", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	rr := httptest.NewRecorder()
+	hr := http.HandlerFunc(h.statusHandler)
+
+	hr.ServeHTTP(rr, req)
+
+	ret := rr.Code
+	if ret != http.StatusOK {
+		t.Errorf("statusHandler returned wrong status code: %v vs %v",
+			ret, http.StatusOK)
 	}
 }
 

@@ -31,6 +31,15 @@ import (
 
 var tlsConfig *tls.Config
 
+func checkError(err error, topic string) error {
+	if err != nil {
+		smslogger.WriteError(topic + ": " + err.Error())
+		return err
+	}
+
+	return nil
+}
+
 // GetTLSConfig initializes a tlsConfig using the CA's certificate
 // This config is then used to enable the server for mutual TLS
 func GetTLSConfig(caCertFile string) (*tls.Config, error) {
@@ -105,36 +114,31 @@ func GeneratePGPKeyPair() (string, string, error) {
 // public key
 func EncryptPGPString(data string, pbKey string) (string, error) {
 	pbKeyBytes, err := base64.StdEncoding.DecodeString(pbKey)
-	if err != nil {
-		smslogger.WriteError("Error Decoding base64 public key: " + err.Error())
+	if checkError(err, "Decoding Base64 Public Key") != nil {
 		return "", err
 	}
 
 	dataBytes := []byte(data)
 
 	pbEntity, err := openpgp.ReadEntity(packet.NewReader(bytes.NewBuffer(pbKeyBytes)))
-	if err != nil {
-		smslogger.WriteError("Error reading entity from PGP key: " + err.Error())
+	if checkError(err, "Reading entity from PGP key") != nil {
 		return "", err
 	}
 
 	// encrypt string
 	buf := new(bytes.Buffer)
 	out, err := openpgp.Encrypt(buf, []*openpgp.Entity{pbEntity}, nil, nil, nil)
-	if err != nil {
-		smslogger.WriteError("Error Creating Encryption Pipe")
-		smslogger.WriteError(err.Error())
+	if checkError(err, "Creating Encryption Pipe") != nil {
 		return "", err
 	}
+
 	_, err = out.Write(dataBytes)
-	if err != nil {
-		smslogger.WriteError("Error Writing to Encryption Pipe")
+	if checkError(err, "Writing to Encryption Pipe") != nil {
 		return "", err
 	}
 
 	err = out.Close()
-	if err != nil {
-		smslogger.WriteError("Error Closing Encryption Pipe")
+	if checkError(err, "Closing Encryption Pipe") != nil {
 		return "", err
 	}
 

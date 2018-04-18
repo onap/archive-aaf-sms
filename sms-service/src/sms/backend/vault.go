@@ -47,10 +47,12 @@ type Vault struct {
 	prkey                 string
 }
 
-// Init will initialize the vault connection
-// It will also create the initial policy if it does not exist
-// TODO: Check to see if we need to wait for vault to be running
-func (v *Vault) Init() error {
+// initVaultClient will create the initial
+// Vault strcuture and populate it with the
+// right values and it will also create
+// a vault client
+func (v *Vault) initVaultClient() error {
+
 	vaultCFG := vaultapi.DefaultConfig()
 	vaultCFG.Address = v.vaultAddress
 	client, err := vaultapi.NewClient(vaultCFG)
@@ -66,12 +68,22 @@ func (v *Vault) Init() error {
 	v.internalDomain = "smsinternaldomain"
 	v.internalDomainMounted = false
 	v.prkey = ""
+	return nil
 
+}
+
+// Init will initialize the vault connection
+// It will also initialize vault if it is not
+// already initialized.
+// The initial policy will also be created
+func (v *Vault) Init() error {
+
+	v.initVaultClient()
 	// Initialize vault if it is not already
 	// Returns immediately if it is initialized
 	v.initializeVault()
 
-	err = v.initRole()
+	err := v.initRole()
 	if err != nil {
 		smslogger.WriteError(err.Error())
 		smslogger.WriteInfo("InitRole will try again later")
@@ -367,6 +379,10 @@ func (v *Vault) DeleteSecret(dom string, name string) error {
 // and secret-id stored on disk
 func (v *Vault) initRole() error {
 
+	if v.initRoleDone {
+		return nil
+	}
+
 	// Use the root token once here
 	v.vaultClient.SetToken(v.vaultToken)
 	defer v.vaultClient.ClearToken()
@@ -470,12 +486,10 @@ func (v *Vault) checkToken() error {
 
 	// Init Role if it is not yet done
 	// Role needs to be created before token can be created
-	if v.initRoleDone == false {
-		err := v.initRole()
-		if err != nil {
-			smslogger.WriteError(err.Error())
-			return errors.New("Unable to initRole in checkToken")
-		}
+	err := v.initRole()
+	if err != nil {
+		smslogger.WriteError(err.Error())
+		return errors.New("Unable to initRole in checkToken")
 	}
 
 	// Return immediately if token still has life

@@ -40,3 +40,47 @@ func TestGetTLSConfig(t *testing.T) {
 		}
 	}
 }
+
+func TestGeneratePGPKeyPair(t *testing.T) {
+
+	_, _, err := GeneratePGPKeyPair()
+	if err != nil {
+		t.Fatal("GeneratePGPKeyPair: Error generating keys")
+	}
+}
+
+func TestEncryptPGPString(t *testing.T) {
+
+	pbkey, _, err := GeneratePGPKeyPair()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	_, err = EncryptPGPString("This is my data", pbkey)
+	if err != nil {
+		t.Fatal("EncryptPGPString: Error encrypting data")
+	}
+}
+
+func TestDecryptPGPString(t *testing.T) {
+
+	pbkey, prkey, err := GeneratePGPKeyPair()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	str := "my test string"
+	encryptedStr, err := EncryptPGPString(str, pbkey)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	decryptedStr, err := DecryptPGPString(encryptedStr, prkey)
+	if err != nil {
+		t.Fatal("DecryptPGPString: Error Decrypting data")
+	}
+
+	if decryptedStr != str {
+		t.Fatal("DecryptPGPString: Decrypted string does not match original")
+	}
+}

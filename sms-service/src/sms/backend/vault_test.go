@@ -17,30 +17,215 @@
 package backend
 
 import (
-//	"testing"
+	credAppRole "github.com/hashicorp/vault/builtin/credential/approle"
+	vaulthttp "github.com/hashicorp/vault/http"
+	vaultlogical "github.com/hashicorp/vault/logical"
+	vaulttesting "github.com/hashicorp/vault/vault"
+	"reflect"
+	smslog "sms/log"
+	"testing"
 )
 
-var v *Vault
+var secret Secret
 
 func init() {
-	v = &Vault{}
+	smslog.Init("")
+	secret = Secret{
+		Name: "testsecret",
+		Values: map[string]interface{}{
+			"name":    "john",
+			"age":     "43",
+			"isadmin": "true",
+		},
+	}
 }
 
-/*
-func TestInit(t *testing.T) {
-	smsconfig.SMSConfig = &smsconfig.SMSConfiguration{BackendAddress: "http://localhost:8200"}
-	v.Init()
-	if v.vaultClient == nil {
+// Only needed when running tests against vault
+func createLocalVaultServer(t *testing.T) (*vaulttesting.TestCluster, *Vault) {
+	tc := vaulttesting.NewTestCluster(t,
+		&vaulttesting.CoreConfig{
+			DisableCache: true,
+			DisableMlock: true,
+			CredentialBackends: map[string]vaultlogical.Factory{
+				"approle": credAppRole.Factory,
+			},
+		},
+		&vaulttesting.TestClusterOptions{
+			HandlerFunc: vaulthttp.Handler,
+			NumCores:    1,
+		})
+
+	tc.Start()
+
+	v := &Vault{}
+	v.initVaultClient()
+	v.vaultToken = tc.RootToken
+	v.vaultClient = tc.Cores[0].Client
+
+	return tc, v
+}
+
+func TestInitVaultClient(t *testing.T) {
+
+	v := &Vault{}
+	v.vaultAddress = "https://localhost:8200"
+	err := v.initVaultClient()
+	if err != nil || v.vaultClient == nil {
 		t.Fatal("Init: Init() failed to create vaultClient")
 	}
 }
 
+func TestInitRole(t *testing.T) {
 
-func TestGetStatus(t *testing.T) {
-	_, err := v.GetStatus()
-	// Expect error as vault is not running
-	if err == nil {
-		t.Fatal("GetStatus: Error expected, none found")
+	tc, v := createLocalVaultServer(t)
+	defer tc.Cleanup()
+
+	v.vaultToken = tc.RootToken
+	v.vaultClient = tc.Cores[0].Client
+
+	err := v.initRole()
+
+	if err != nil {
+		t.Fatal("InitRole: InitRole() failed to create roles")
 	}
 }
-*/
+
+func TestGetStatus(t *testing.T) {
+
+	tc, v := createLocalVaultServer(t)
+	defer tc.Cleanup()
+
+	st, err := v.GetStatus()
+
+	if err != nil {
+		t.Fatal("GetStatus: Returned error")
+	}
+
+	if st == true {
+		t.Fatal("GetStatus: Returned true. Expected false")
+	}
+}
+
+func TestCreateSecretDomain(t *testing.T) {
+
+	tc, v := createLocalVaultServer(t)
+	defer tc.Cleanup()
+
+	sd, err := v.CreateSecretDomain("testdomain")
+
+	if err != nil {
+		t.Fatal("CreateSecretDomain: Returned error")
+	}
+
+	if sd.Name != "testdomain" {
+		t.Fatal("CreateSecretDomain: Returned name does not match: " + sd.Name)
+	}
+
+	if sd.UUID == "" {
+		t.Fatal("CreateSecretDomain: Returned UUID is empty")
+	}
+}
+
+func TestDeleteSecretDomain(t *testing.T) {
+
+	tc, v := createLocalVaultServer(t)
+	defer tc.Cleanup()
+
+	_, err := v.CreateSecretDomain("testdomain")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	err = v.DeleteSecretDomain("testdomain")
+	if err != nil {
+		t.Fatal("DeleteSecretDomain: Unable to delete domain")
+	}
+}
+
+func TestCreateSecret(t *testing.T) {
+
+	tc, v := createLocalVaultServer(t)
+	defer tc.Cleanup()
+
+	_, err := v.CreateSecretDomain("testdomain")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	err = v.CreateSecret("testdomain", secret)
+
+	if err != nil {
+		t.Fatal("CreateSecret: Error Creating secret")
+	}
+}
+
+func TestGetSecret(t *testing.T) {
+
+	tc, v := createLocalVaultServer(t)
+	defer tc.Cleanup()
+
+	_, err := v.CreateSecretDomain("testdomain")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	err = v.CreateSecret("testdomain", secret)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	sec, err := v.GetSecret("testdomain", secret.Name)
+	if err != nil {
+		t.Fatal("GetSecret: Error Creating secret")
+	}
+
+	if sec.Name != secret.Name {
+		t.Fatal("GetSecret: Returned incorrect name")
+	}
+
+	if reflect.DeepEqual(sec.Values, secret.Values) == false {
+		t.Fatal("GetSecret: Returned incorrect Values")
+	}
+}
+
+func TestListSecret(t *testing.T) {
+
+	tc, v := createLocalVaultServer(t)
+	defer tc.Cleanup()
+
+	_, err := v.CreateSecretDomain("testdomain")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	err = v.CreateSecret("testdomain", secret)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	_, err = v.ListSecret("testdomain")
+	if err != nil {
+		t.Fatal("ListSecret: Returned error")
+	}
+}
+
+func TestDeleteSecret(t *testing.T) {
+
+	tc, v := createLocalVaultServer(t)
+	defer tc.Cleanup()
+
+	_, err := v.CreateSecretDomain("testdomain")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	err = v.CreateSecret("testdomain", secret)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	err = v.DeleteSecret("testdomain", secret.Name)
+	if err != nil {
+		t.Fatal("DeleteSecret: Error Creating secret")
+	}
+}
