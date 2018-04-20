@@ -54,19 +54,19 @@
 			<div id="nav">
 				<select id="files">
 				
-				<option value="file0">sms/auth/auth.go (17.6%)</option>
+				<option value="file0">sms/auth/auth.go (76.1%)</option>
 				
-				<option value="file1">sms/backend/backend.go (66.7%)</option>
+				<option value="file1">sms/backend/backend.go (80.0%)</option>
 				
-				<option value="file2">sms/backend/vault.go (60.5%)</option>
+				<option value="file2">sms/backend/vault.go (72.5%)</option>
 				
-				<option value="file3">sms/config/config.go (90.9%)</option>
+				<option value="file3">sms/config/config.go (78.6%)</option>
 				
-				<option value="file4">sms/handler/handler.go (55.1%)</option>
+				<option value="file4">sms/handler/handler.go (63.0%)</option>
 				
-				<option value="file5">sms/log/logger.go (31.2%)</option>
+				<option value="file5">sms/log/logger.go (65.6%)</option>
 				
-				<option value="file6">sms/sms.go (82.6%)</option>
+				<option value="file6">sms/sms.go (77.8%)</option>
 				
 				</select>
 			</div>
@@ -109,6 +109,7 @@ package auth
 
 import (
         "bytes"
+        "crypto"
         "crypto/tls"
         "crypto/x509"
         "encoding/base64"
@@ -119,63 +120,63 @@ import (
         smslogger "sms/log"
 )
 
-var tlsConfig *tls.Config
-
 // GetTLSConfig initializes a tlsConfig using the CA's certificate
 // This config is then used to enable the server for mutual TLS
 func GetTLSConfig(caCertFile string) (*tls.Config, error) <span class="cov10" title="3">{
+
         // Initialize tlsConfig once
-        if tlsConfig == nil </span><span class="cov10" title="3">{
-                caCert, err := ioutil.ReadFile(caCertFile)
+        caCert, err := ioutil.ReadFile(caCertFile)
 
-                if err != nil </span><span class="cov1" title="1">{
-                        return nil, err
-                }</span>
+        if err != nil </span><span class="cov1" title="1">{
+                return nil, err
+        }</span>
 
-                <span class="cov6" title="2">caCertPool := x509.NewCertPool()
-                caCertPool.AppendCertsFromPEM(caCert)
+        <span class="cov6" title="2">caCertPool := x509.NewCertPool()
+        caCertPool.AppendCertsFromPEM(caCert)
 
-                tlsConfig = &amp;tls.Config{
-                        ClientAuth: tls.RequireAndVerifyClientCert,
-                        ClientCAs:  caCertPool,
-                        MinVersion: tls.VersionTLS12,
-                }
-                tlsConfig.BuildNameToCertificate()</span>
+        tlsConfig := &amp;tls.Config{
+                // Change to RequireAndVerify once we have mandatory certs
+                ClientAuth: tls.VerifyClientCertIfGiven,
+                ClientCAs:  caCertPool,
+                MinVersion: tls.VersionTLS12,
         }
-        <span class="cov6" title="2">return tlsConfig, nil</span>
+        tlsConfig.BuildNameToCertificate()
+        return tlsConfig, nil</span>
 }
 
 // GeneratePGPKeyPair produces a PGP key pair and returns
 // two things:
 // A base64 encoded form of the public part of the entity
 // A base64 encoded form of the private key
-func GeneratePGPKeyPair() (string, string, error) <span class="cov0" title="0">{
+func GeneratePGPKeyPair() (string, string, error) <span class="cov10" title="3">{
+
         var entity *openpgp.Entity
-        entity, err := openpgp.NewEntity("aaf.sms.init", "PGP Key for unsealing", "", nil)
-        if err != nil </span><span class="cov0" title="0">{
-                smslogger.WriteError(err.Error())
+        config := &amp;packet.Config{
+                DefaultHash: crypto.SHA256,
+        }
+
+        entity, err := openpgp.NewEntity("aaf.sms.init", "PGP Key for unsealing", "", config)
+        if smslogger.CheckError(err, "Create Entity") != nil </span><span class="cov0" title="0">{
                 return "", "", err
         }</span>
 
         // Sign the identity in the entity
-        <span class="cov0" title="0">for _, id := range entity.Identities </span><span class="cov0" title="0">{
+        <span class="cov10" title="3">for _, id := range entity.Identities </span><span class="cov10" title="3">{
                 err = id.SelfSignature.SignUserId(id.UserId.Id, entity.PrimaryKey, entity.PrivateKey, nil)
-                if err != nil </span><span class="cov0" title="0">{
-                        smslogger.WriteError(err.Error())
+                if smslogger.CheckError(err, "Sign Entity") != nil </span><span class="cov0" title="0">{
                         return "", "", err
                 }</span>
         }
 
         // Sign the subkey in the entity
-        <span class="cov0" title="0">for _, subkey := range entity.Subkeys </span><span class="cov0" title="0">{
+        <span class="cov10" title="3">for _, subkey := range entity.Subkeys </span><span class="cov10" title="3">{
                 err := subkey.Sig.SignKey(subkey.PublicKey, entity.PrivateKey, nil)
-                if err != nil </span><span class="cov0" title="0">{
-                        smslogger.WriteError(err.Error())
+                if smslogger.CheckError(err, "Sign Subkey") != nil </span><span class="cov0" title="0">{
                         return "", "", err
                 }</span>
         }
 
-        <span class="cov0" title="0">buffer := new(bytes.Buffer)
+        <span class="cov10" title="3">buffer := new(bytes.Buffer)
         entity.Serialize(buffer)
         pbkey := base64.StdEncoding.EncodeToString(buffer.Bytes())
 
@@ -186,39 +187,95 @@ func GeneratePGPKeyPair() (string, string, error) <span class="cov0" title="0">{
         return pbkey, prkey, nil</span>
 }
 
-// DecryptPGPBytes decrypts a PGP encoded input string and returns
+// EncryptPGPString takes data and a public key and encrypts using that
+// public key
+func EncryptPGPString(data string, pbKey string) (string, error) <span class="cov6" title="2">{
+
+        pbKeyBytes, err := base64.StdEncoding.DecodeString(pbKey)
+        if smslogger.CheckError(err, "Decoding Base64 Public Key") != nil </span><span class="cov0" title="0">{
+                return "", err
+        }</span>
+
+        <span class="cov6" title="2">dataBytes := []byte(data)
+
+        pbEntity, err := openpgp.ReadEntity(packet.NewReader(bytes.NewBuffer(pbKeyBytes)))
+        if smslogger.CheckError(err, "Reading entity from PGP key") != nil </span><span class="cov0" title="0">{
+                return "", err
+        }</span>
+
+        // encrypt string
+        <span class="cov6" title="2">buf := new(bytes.Buffer)
+        out, err := openpgp.Encrypt(buf, []*openpgp.Entity{pbEntity}, nil, nil, nil)
+        if smslogger.CheckError(err, "Creating Encryption Pipe") != nil </span><span class="cov0" title="0">{
+                return "", err
+        }</span>
+
+        <span class="cov6" title="2">_, err = out.Write(dataBytes)
+        if smslogger.CheckError(err, "Writing to Encryption Pipe") != nil </span><span class="cov0" title="0">{
+                return "", err
+        }</span>
+
+        <span class="cov6" title="2">err = out.Close()
+        if smslogger.CheckError(err, "Closing Encryption Pipe") != nil </span><span class="cov0" title="0">{
+                return "", err
+        }</span>
+
+        <span class="cov6" title="2">crp := base64.StdEncoding.EncodeToString(buf.Bytes())
+        return crp, nil</span>
+}
+
+// DecryptPGPString decrypts a PGP encoded input string and returns
 // a base64 representation of the decoded string
-func DecryptPGPBytes(data string, prKey string) (string, error) <span class="cov0" title="0">{
+func DecryptPGPString(data string, prKey string) (string, error) <span class="cov1" title="1">{
+
         // Convert private key to bytes from base64
         prKeyBytes, err := base64.StdEncoding.DecodeString(prKey)
-        if err != nil </span><span class="cov0" title="0">{
-                smslogger.WriteError("Error Decoding base64 private key: " + err.Error())
+        if smslogger.CheckError(err, "Decoding Base64 Private Key") != nil </span><span class="cov0" title="0">{
                 return "", err
         }</span>
 
-        <span class="cov0" title="0">dataBytes, err := base64.StdEncoding.DecodeString(data)
-        if err != nil </span><span class="cov0" title="0">{
-                smslogger.WriteError("Error Decoding base64 data: " + err.Error())
+        <span class="cov1" title="1">dataBytes, err := base64.StdEncoding.DecodeString(data)
+        if smslogger.CheckError(err, "Decoding base64 data") != nil </span><span class="cov0" title="0">{
                 return "", err
         }</span>
 
-        <span class="cov0" title="0">prEntity, err := openpgp.ReadEntity(packet.NewReader(bytes.NewBuffer(prKeyBytes)))
-        if err != nil </span><span class="cov0" title="0">{
-                smslogger.WriteError("Error reading entity from PGP key: " + err.Error())
+        <span class="cov1" title="1">prEntity, err := openpgp.ReadEntity(packet.NewReader(bytes.NewBuffer(prKeyBytes)))
+        if smslogger.CheckError(err, "Read Entity") != nil </span><span class="cov0" title="0">{
                 return "", err
         }</span>
 
-        <span class="cov0" title="0">prEntityList := &amp;openpgp.EntityList{prEntity}
+        <span class="cov1" title="1">prEntityList := &amp;openpgp.EntityList{prEntity}
         message, err := openpgp.ReadMessage(bytes.NewBuffer(dataBytes), prEntityList, nil, nil)
-        if err != nil </span><span class="cov0" title="0">{
-                smslogger.WriteError("Error Decrypting message: " + err.Error())
+        if smslogger.CheckError(err, "Decrypting Message") != nil </span><span class="cov0" title="0">{
                 return "", err
         }</span>
 
-        <span class="cov0" title="0">var retBuf bytes.Buffer
+        <span class="cov1" title="1">var retBuf bytes.Buffer
         retBuf.ReadFrom(message.UnverifiedBody)
 
         return retBuf.String(), nil</span>
+}
+
+// ReadFromFile reads a file and loads the PGP key into
+// a string
+func ReadFromFile(fileName string) (string, error) <span class="cov6" title="2">{
+
+        data, err := ioutil.ReadFile(fileName)
+        if smslogger.CheckError(err, "Read from file") != nil </span><span class="cov0" title="0">{
+                return "", err
+        }</span>
+        <span class="cov6" title="2">return string(data), nil</span>
+}
+
+// WriteToFile writes a PGP key into a file.
+// It will truncate the file if it exists
+func WriteToFile(data string, fileName string) error <span class="cov0" title="0">{
+
+        err := ioutil.WriteFile(fileName, []byte(data), 0600)
+        if smslogger.CheckError(err, "Write to file") != nil </span><span class="cov0" title="0">{
+                return err
+        }</span>
+        <span class="cov0" title="0">return nil</span>
 }
 </pre>
 		
@@ -264,6 +321,7 @@ type SecretBackend interface {
         Init() error
         GetStatus() (bool, error)
         Unseal(shard string) error
+        RegisterQuorum(pgpkey string) (string, error)
 
         GetSecret(dom string, sec string) (Secret, error)
         ListSecret(dom string) ([]string, error)
@@ -276,19 +334,18 @@ type SecretBackend interface {
 }
 
 // InitSecretBackend returns an interface implementation
-func InitSecretBackend() (SecretBackend, error) <span class="cov10" title="2">{
+func InitSecretBackend() (SecretBackend, error) <span class="cov8" title="1">{
         backendImpl := &amp;Vault{
-                vaultAddress: smsconfig.SMSConfig.VaultAddress,
+                vaultAddress: smsconfig.SMSConfig.BackendAddress,
                 vaultToken:   smsconfig.SMSConfig.VaultToken,
         }
 
         err := backendImpl.Init()
-        if err != nil </span><span class="cov0" title="0">{
-                smslogger.WriteError(err.Error())
+        if smslogger.CheckError(err, "InitSecretBackend") != nil </span><span class="cov0" title="0">{
                 return nil, err
         }</span>
 
-        <span class="cov10" title="2">return backendImpl, nil</span>
+        <span class="cov8" title="1">return backendImpl, nil</span>
 }
 
 // LoginBackend Interface that will be implemented for various login backends
@@ -330,68 +387,108 @@ import (
 // Vault is the main Struct used in Backend to initialize the struct
 type Vault struct {
         sync.Mutex
-        engineType        string
-        initRoleDone      bool
-        policyName        string
-        roleID            string
-        secretID          string
-        vaultAddress      string
-        vaultClient       *vaultapi.Client
-        vaultMount        string
-        vaultTempTokenTTL time.Time
-        vaultToken        string
-        unsealShards      []string
-        rootToken         string
-        pgpPub            string
-        pgpPr             string
+        initRoleDone          bool
+        policyName            string
+        roleID                string
+        secretID              string
+        vaultAddress          string
+        vaultClient           *vaultapi.Client
+        vaultMountPrefix      string
+        internalDomain        string
+        internalDomainMounted bool
+        vaultTempTokenTTL     time.Time
+        vaultToken            string
+        shards                []string
+        prkey                 string
 }
 
-// Init will initialize the vault connection
-// It will also create the initial policy if it does not exist
-// TODO: Check to see if we need to wait for vault to be running
-func (v *Vault) Init() error <span class="cov4" title="3">{
+// initVaultClient will create the initial
+// Vault strcuture and populate it with the
+// right values and it will also create
+// a vault client
+func (v *Vault) initVaultClient() error <span class="cov6" title="11">{
+
         vaultCFG := vaultapi.DefaultConfig()
         vaultCFG.Address = v.vaultAddress
         client, err := vaultapi.NewClient(vaultCFG)
-        if err != nil </span><span class="cov0" title="0">{
-                smslogger.WriteError(err.Error())
-                return errors.New("Unable to create new vault client")
+        if smslogger.CheckError(err, "Create new vault client") != nil </span><span class="cov0" title="0">{
+                return err
         }</span>
 
-        <span class="cov4" title="3">v.engineType = "kv"
-        v.initRoleDone = false
+        <span class="cov6" title="11">v.initRoleDone = false
         v.policyName = "smsvaultpolicy"
         v.vaultClient = client
-        v.vaultMount = "sms"
+        v.vaultMountPrefix = "sms"
+        v.internalDomain = "smsinternaldomain"
+        v.internalDomainMounted = false
+        v.prkey = ""
+        return nil</span>
+}
 
-        err = v.initRole()
-        if err != nil </span><span class="cov2" title="2">{
-                smslogger.WriteError(err.Error())
+// Init will initialize the vault connection
+// It will also initialize vault if it is not
+// already initialized.
+// The initial policy will also be created
+func (v *Vault) Init() error <span class="cov1" title="1">{
+
+        v.initVaultClient()
+        // Initialize vault if it is not already
+        // Returns immediately if it is initialized
+        v.initializeVault()
+
+        err := v.initRole()
+        if smslogger.CheckError(err, "InitRole First Attempt") != nil </span><span class="cov0" title="0">{
                 smslogger.WriteInfo("InitRole will try again later")
         }</span>
 
-        <span class="cov4" title="3">return nil</span>
+        <span class="cov1" title="1">return nil</span>
 }
 
 // GetStatus returns the current seal status of vault
-func (v *Vault) GetStatus() (bool, error) <span class="cov4" title="3">{
+func (v *Vault) GetStatus() (bool, error) <span class="cov3" title="3">{
+
         sys := v.vaultClient.Sys()
         sealStatus, err := sys.SealStatus()
-        if err != nil </span><span class="cov1" title="1">{
-                smslogger.WriteError(err.Error())
+        if smslogger.CheckError(err, "Getting Status") != nil </span><span class="cov0" title="0">{
                 return false, errors.New("Error getting status")
         }</span>
 
-        <span class="cov2" title="2">return sealStatus.Sealed, nil</span>
+        <span class="cov3" title="3">return sealStatus.Sealed, nil</span>
+}
+
+// RegisterQuorum registers the PGP public key for a quorum client
+// We will return a shard to the client that is registering
+func (v *Vault) RegisterQuorum(pgpkey string) (string, error) <span class="cov0" title="0">{
+
+        v.Lock()
+        defer v.Unlock()
+
+        if v.shards == nil </span><span class="cov0" title="0">{
+                smslogger.WriteError("Invalid operation in RegisterQuorum")
+                return "", errors.New("Invalid operation")
+        }</span>
+        // Pop the slice
+        <span class="cov0" title="0">var sh string
+        sh, v.shards = v.shards[len(v.shards)-1], v.shards[:len(v.shards)-1]
+        if len(v.shards) == 0 </span><span class="cov0" title="0">{
+                v.shards = nil
+        }</span>
+
+        // Decrypt with SMS pgp Key
+        <span class="cov0" title="0">sh, _ = smsauth.DecryptPGPString(sh, v.prkey)
+        // Encrypt with Quorum client pgp key
+        sh, _ = smsauth.EncryptPGPString(sh, pgpkey)
+
+        return sh, nil</span>
 }
 
 // Unseal is a passthrough API that allows any
 // unseal or initialization processes for the backend
 func (v *Vault) Unseal(shard string) error <span class="cov0" title="0">{
+
         sys := v.vaultClient.Sys()
         _, err := sys.Unseal(shard)
-        if err != nil </span><span class="cov0" title="0">{
-                smslogger.WriteError(err.Error())
+        if smslogger.CheckError(err, "Unseal Operation") != nil </span><span class="cov0" title="0">{
                 return errors.New("Unable to execute unseal operation with specified shard")
         }</span>
 
@@ -401,80 +498,140 @@ func (v *Vault) Unseal(shard string) error <span class="cov0" title="0">{
 // GetSecret returns a secret mounted on a particular domain name
 // The secret itself is referenced via its name which translates to
 // a mount path in vault
-func (v *Vault) GetSecret(dom string, name string) (Secret, error) <span class="cov6" title="6">{
+func (v *Vault) GetSecret(dom string, name string) (Secret, error) <span class="cov5" title="7">{
+
         err := v.checkToken()
-        if err != nil </span><span class="cov0" title="0">{
-                smslogger.WriteError(err.Error())
+        if smslogger.CheckError(err, "Tocken Check") != nil </span><span class="cov0" title="0">{
                 return Secret{}, errors.New("Token check failed")
         }</span>
 
-        <span class="cov6" title="6">dom = v.vaultMount + "/" + dom
+        <span class="cov5" title="7">dom = v.vaultMountPrefix + "/" + dom
 
         sec, err := v.vaultClient.Logical().Read(dom + "/" + name)
-        if err != nil </span><span class="cov0" title="0">{
-                smslogger.WriteError(err.Error())
+        if smslogger.CheckError(err, "Read Secret") != nil </span><span class="cov0" title="0">{
                 return Secret{}, errors.New("Unable to read Secret at provided path")
         }</span>
 
         // sec and err are nil in the case where a path does not exist
-        <span class="cov6" title="6">if sec == nil </span><span class="cov0" title="0">{
+        <span class="cov5" title="7">if sec == nil </span><span class="cov0" title="0">{
                 smslogger.WriteWarn("Vault read was empty. Invalid Path")
                 return Secret{}, errors.New("Secret not found at the provided path")
         }</span>
 
-        <span class="cov6" title="6">return Secret{Name: name, Values: sec.Data}, nil</span>
+        <span class="cov5" title="7">return Secret{Name: name, Values: sec.Data}, nil</span>
 }
 
 // ListSecret returns a list of secret names on a particular domain
 // The values of the secret are not returned
-func (v *Vault) ListSecret(dom string) ([]string, error) <span class="cov2" title="2">{
+func (v *Vault) ListSecret(dom string) ([]string, error) <span class="cov3" title="3">{
+
         err := v.checkToken()
-        if err != nil </span><span class="cov0" title="0">{
-                smslogger.WriteError(err.Error())
+        if smslogger.CheckError(err, "Token Check") != nil </span><span class="cov0" title="0">{
                 return nil, errors.New("Token check failed")
         }</span>
 
-        <span class="cov2" title="2">dom = v.vaultMount + "/" + dom
+        <span class="cov3" title="3">dom = v.vaultMountPrefix + "/" + dom
 
         sec, err := v.vaultClient.Logical().List(dom)
-        if err != nil </span><span class="cov0" title="0">{
-                smslogger.WriteError(err.Error())
+        if smslogger.CheckError(err, "Read Secret") != nil </span><span class="cov0" title="0">{
                 return nil, errors.New("Unable to read Secret at provided path")
         }</span>
 
         // sec and err are nil in the case where a path does not exist
-        <span class="cov2" title="2">if sec == nil </span><span class="cov0" title="0">{
+        <span class="cov3" title="3">if sec == nil </span><span class="cov0" title="0">{
                 smslogger.WriteWarn("Vaultclient returned empty data")
                 return nil, errors.New("Secret not found at the provided path")
         }</span>
 
-        <span class="cov2" title="2">val, ok := sec.Data["keys"].([]interface{})
+        <span class="cov3" title="3">val, ok := sec.Data["keys"].([]interface{})
         if !ok </span><span class="cov0" title="0">{
                 smslogger.WriteError("Secret not found at the provided path")
                 return nil, errors.New("Secret not found at the provided path")
         }</span>
 
-        <span class="cov2" title="2">retval := make([]string, len(val))
-        for i, v := range val </span><span class="cov6" title="6">{
+        <span class="cov3" title="3">retval := make([]string, len(val))
+        for i, v := range val </span><span class="cov5" title="7">{
                 retval[i] = fmt.Sprint(v)
         }</span>
 
-        <span class="cov2" title="2">return retval, nil</span>
+        <span class="cov3" title="3">return retval, nil</span>
+}
+
+// Mounts the internal Domain if its not already mounted
+func (v *Vault) mountInternalDomain(name string) error <span class="cov5" title="8">{
+
+        if v.internalDomainMounted </span><span class="cov1" title="1">{
+                return nil
+        }</span>
+
+        <span class="cov5" title="7">name = strings.TrimSpace(name)
+        mountPath := v.vaultMountPrefix + "/" + name
+        mountInput := &amp;vaultapi.MountInput{
+                Type:        "kv",
+                Description: "Mount point for domain: " + name,
+                Local:       false,
+                SealWrap:    false,
+                Config:      vaultapi.MountConfigInput{},
+        }
+
+        err := v.vaultClient.Sys().Mount(mountPath, mountInput)
+        if smslogger.CheckError(err, "Mount internal Domain") != nil </span><span class="cov1" title="1">{
+                if strings.Contains(err.Error(), "existing mount") </span><span class="cov1" title="1">{
+                        // It is already mounted
+                        v.internalDomainMounted = true
+                        return nil
+                }</span>
+                // Ran into some other error mounting it.
+                <span class="cov0" title="0">return errors.New("Unable to mount internal Domain")</span>
+        }
+
+        <span class="cov5" title="6">v.internalDomainMounted = true
+        return nil</span>
+}
+
+// Stores the UUID created for secretdomain in vault
+// under v.vaultMountPrefix / smsinternal domain
+func (v *Vault) storeUUID(uuid string, name string) error <span class="cov5" title="8">{
+
+        // Check if token is still valid
+        err := v.checkToken()
+        if smslogger.CheckError(err, "Token Check") != nil </span><span class="cov0" title="0">{
+                return errors.New("Token Check failed")
+        }</span>
+
+        <span class="cov5" title="8">err = v.mountInternalDomain(v.internalDomain)
+        if smslogger.CheckError(err, "Mount Internal Domain") != nil </span><span class="cov0" title="0">{
+                return err
+        }</span>
+
+        <span class="cov5" title="8">secret := Secret{
+                Name: name,
+                Values: map[string]interface{}{
+                        "uuid": uuid,
+                },
+        }
+
+        err = v.CreateSecret(v.internalDomain, secret)
+        if smslogger.CheckError(err, "Write UUID to domain") != nil </span><span class="cov0" title="0">{
+                return err
+        }</span>
+
+        <span class="cov5" title="8">return nil</span>
 }
 
 // CreateSecretDomain mounts the kv backend on a path with the given name
-func (v *Vault) CreateSecretDomain(name string) (SecretDomain, error) <span class="cov2" title="2">{
+func (v *Vault) CreateSecretDomain(name string) (SecretDomain, error) <span class="cov5" title="8">{
+
         // Check if token is still valid
         err := v.checkToken()
-        if err != nil </span><span class="cov0" title="0">{
-                smslogger.WriteError(err.Error())
+        if smslogger.CheckError(err, "Token Check") != nil </span><span class="cov0" title="0">{
                 return SecretDomain{}, errors.New("Token Check failed")
         }</span>
 
-        <span class="cov2" title="2">name = strings.TrimSpace(name)
-        mountPath := v.vaultMount + "/" + name
+        <span class="cov5" title="8">name = strings.TrimSpace(name)
+        mountPath := v.vaultMountPrefix + "/" + name
         mountInput := &amp;vaultapi.MountInput{
-                Type:        v.engineType,
+                Type:        "kv",
                 Description: "Mount point for domain: " + name,
                 Local:       false,
                 SealWrap:    false,
@@ -482,171 +639,212 @@ func (v *Vault) CreateSecretDomain(name string) (SecretDomain, error) <span clas
         }
 
         err = v.vaultClient.Sys().Mount(mountPath, mountInput)
-        if err != nil </span><span class="cov0" title="0">{
-                smslogger.WriteError(err.Error())
+        if smslogger.CheckError(err, "Create Domain") != nil </span><span class="cov0" title="0">{
                 return SecretDomain{}, errors.New("Unable to create Secret Domain")
         }</span>
 
-        <span class="cov2" title="2">uuid, _ := uuid.GenerateUUID()
-        return SecretDomain{uuid, name}, nil</span>
+        <span class="cov5" title="8">uuid, _ := uuid.GenerateUUID()
+        err = v.storeUUID(uuid, name)
+        if smslogger.CheckError(err, "Store UUID") != nil </span><span class="cov0" title="0">{
+                // Mount was successful at this point.
+                // Rollback the mount operation since we could not
+                // store the UUID for the mount.
+                v.vaultClient.Sys().Unmount(mountPath)
+                return SecretDomain{}, errors.New("Unable to store Secret Domain UUID. Retry")
+        }</span>
+
+        <span class="cov5" title="8">return SecretDomain{uuid, name}, nil</span>
 }
 
 // CreateSecret creates a secret mounted on a particular domain name
 // The secret itself is mounted on a path specified by name
-func (v *Vault) CreateSecret(dom string, sec Secret) error <span class="cov6" title="6">{
+func (v *Vault) CreateSecret(dom string, sec Secret) error <span class="cov7" title="18">{
+
         err := v.checkToken()
-        if err != nil </span><span class="cov0" title="0">{
-                smslogger.WriteError(err.Error())
+        if smslogger.CheckError(err, "Token Check") != nil </span><span class="cov0" title="0">{
                 return errors.New("Token check failed")
         }</span>
 
-        <span class="cov6" title="6">dom = v.vaultMount + "/" + dom
+        <span class="cov7" title="18">dom = v.vaultMountPrefix + "/" + dom
 
         // Vault return is empty on successful write
         // TODO: Check if values is not empty
         _, err = v.vaultClient.Logical().Write(dom+"/"+sec.Name, sec.Values)
-        if err != nil </span><span class="cov0" title="0">{
-                smslogger.WriteError(err.Error())
+        if smslogger.CheckError(err, "Create Secret") != nil </span><span class="cov0" title="0">{
                 return errors.New("Unable to create Secret at provided path")
         }</span>
 
-        <span class="cov6" title="6">return nil</span>
+        <span class="cov7" title="18">return nil</span>
 }
 
 // DeleteSecretDomain deletes a secret domain which translates to
 // an unmount operation on the given path in Vault
-func (v *Vault) DeleteSecretDomain(name string) error <span class="cov2" title="2">{
+func (v *Vault) DeleteSecretDomain(name string) error <span class="cov3" title="3">{
+
         err := v.checkToken()
-        if err != nil </span><span class="cov0" title="0">{
-                smslogger.WriteError(err.Error())
+        if smslogger.CheckError(err, "Token Check") != nil </span><span class="cov0" title="0">{
                 return errors.New("Token Check Failed")
         }</span>
 
-        <span class="cov2" title="2">name = strings.TrimSpace(name)
-        mountPath := v.vaultMount + "/" + name
+        <span class="cov3" title="3">name = strings.TrimSpace(name)
+        mountPath := v.vaultMountPrefix + "/" + name
 
         err = v.vaultClient.Sys().Unmount(mountPath)
-        if err != nil </span><span class="cov0" title="0">{
-                smslogger.WriteError(err.Error())
+        if smslogger.CheckError(err, "Delete Domain") != nil </span><span class="cov0" title="0">{
                 return errors.New("Unable to delete domain specified")
         }</span>
 
-        <span class="cov2" title="2">return nil</span>
+        <span class="cov3" title="3">return nil</span>
 }
 
 // DeleteSecret deletes a secret mounted on the path provided
-func (v *Vault) DeleteSecret(dom string, name string) error <span class="cov6" title="6">{
+func (v *Vault) DeleteSecret(dom string, name string) error <span class="cov5" title="7">{
+
         err := v.checkToken()
-        if err != nil </span><span class="cov0" title="0">{
-                smslogger.WriteError(err.Error())
+        if smslogger.CheckError(err, "Token Check") != nil </span><span class="cov0" title="0">{
                 return errors.New("Token check failed")
         }</span>
 
-        <span class="cov6" title="6">dom = v.vaultMount + "/" + dom
+        <span class="cov5" title="7">dom = v.vaultMountPrefix + "/" + dom
 
         // Vault return is empty on successful delete
         _, err = v.vaultClient.Logical().Delete(dom + "/" + name)
-        if err != nil </span><span class="cov0" title="0">{
-                smslogger.WriteError(err.Error())
+        if smslogger.CheckError(err, "Delete Secret") != nil </span><span class="cov0" title="0">{
                 return errors.New("Unable to delete Secret at provided path")
         }</span>
 
-        <span class="cov6" title="6">return nil</span>
+        <span class="cov5" title="7">return nil</span>
 }
 
-// initRole is called only once during the service bring up
-func (v *Vault) initRole() error <span class="cov4" title="3">{
+// initRole is called only once during SMS bring up
+// It initially creates a role and secret id associated with
+// that role. Later restarts will use the existing role-id
+// and secret-id stored on disk
+func (v *Vault) initRole() error <span class="cov10" title="56">{
+
+        if v.initRoleDone </span><span class="cov9" title="48">{
+                return nil
+        }</span>
+
         // Use the root token once here
-        v.vaultClient.SetToken(v.vaultToken)
+        <span class="cov5" title="8">v.vaultClient.SetToken(v.vaultToken)
         defer v.vaultClient.ClearToken()
 
-        rules := `path "sms/*" { capabilities = ["create", "read", "update", "delete", "list"] }
+        // Check if roleID and secretID has already been created
+        rID, error := smsauth.ReadFromFile("auth/role")
+        if error != nil </span><span class="cov5" title="7">{
+                smslogger.WriteWarn("Unable to find RoleID. Generating...")
+        }</span><span class="cov1" title="1"> else {
+                sID, error := smsauth.ReadFromFile("auth/secret")
+                if error != nil </span><span class="cov0" title="0">{
+                        smslogger.WriteWarn("Unable to find secretID. Generating...")
+                }</span><span class="cov1" title="1"> else {
+                        v.roleID = rID
+                        v.secretID = sID
+                        v.initRoleDone = true
+                        return nil
+                }</span>
+        }
+
+        <span class="cov5" title="7">rules := `path "sms/*" { capabilities = ["create", "read", "update", "delete", "list"] }
                         path "sys/mounts/sms*" { capabilities = ["update","delete","create"] }`
         err := v.vaultClient.Sys().PutPolicy(v.policyName, rules)
-        if err != nil </span><span class="cov2" title="2">{
-                smslogger.WriteError(err.Error())
+        if smslogger.CheckError(err, "Creating Policy") != nil </span><span class="cov0" title="0">{
                 return errors.New("Unable to create policy for approle creation")
         }</span>
 
-        <span class="cov1" title="1">rName := v.vaultMount + "-role"
-        data := map[string]interface{}{
-                "token_ttl": "60m",
-                "policies":  [2]string{"default", v.policyName},
-        }
-
         //Check if applrole is mounted
-        authMounts, err := v.vaultClient.Sys().ListAuth()
-        if err != nil </span><span class="cov0" title="0">{
-                smslogger.WriteError(err.Error())
+        <span class="cov5" title="7">authMounts, err := v.vaultClient.Sys().ListAuth()
+        if smslogger.CheckError(err, "Mount Auth Backend") != nil </span><span class="cov0" title="0">{
                 return errors.New("Unable to get mounted auth backends")
         }</span>
 
-        <span class="cov1" title="1">approleMounted := false
-        for k, v := range authMounts </span><span class="cov1" title="1">{
-                if v.Type == "approle" &amp;&amp; k == "approle/" </span><span class="cov1" title="1">{
+        <span class="cov5" title="7">approleMounted := false
+        for k, v := range authMounts </span><span class="cov5" title="7">{
+                if v.Type == "approle" &amp;&amp; k == "approle/" </span><span class="cov0" title="0">{
                         approleMounted = true
                         break</span>
                 }
         }
 
         // Mount approle in case its not already mounted
-        <span class="cov1" title="1">if !approleMounted </span><span class="cov0" title="0">{
+        <span class="cov5" title="7">if !approleMounted </span><span class="cov5" title="7">{
                 v.vaultClient.Sys().EnableAuth("approle", "approle", "")
         }</span>
 
+        <span class="cov5" title="7">rName := v.vaultMountPrefix + "-role"
+        data := map[string]interface{}{
+                "token_ttl": "60m",
+                "policies":  [2]string{"default", v.policyName},
+        }
+
         // Create a role-id
-        <span class="cov1" title="1">v.vaultClient.Logical().Write("auth/approle/role/"+rName, data)
+        v.vaultClient.Logical().Write("auth/approle/role/"+rName, data)
         sec, err := v.vaultClient.Logical().Read("auth/approle/role/" + rName + "/role-id")
-        if err != nil </span><span class="cov0" title="0">{
-                smslogger.WriteError(err.Error())
+        if smslogger.CheckError(err, "Create RoleID") != nil </span><span class="cov0" title="0">{
                 return errors.New("Unable to create role ID for approle")
         }</span>
-        <span class="cov1" title="1">v.roleID = sec.Data["role_id"].(string)
+        <span class="cov5" title="7">v.roleID = sec.Data["role_id"].(string)
 
         // Create a secret-id to go with it
         sec, err = v.vaultClient.Logical().Write("auth/approle/role/"+rName+"/secret-id",
                 map[string]interface{}{})
-        if err != nil </span><span class="cov0" title="0">{
-                smslogger.WriteError(err.Error())
+        if smslogger.CheckError(err, "Create SecretID") != nil </span><span class="cov0" title="0">{
                 return errors.New("Unable to create secret ID for role")
         }</span>
 
-        <span class="cov1" title="1">v.secretID = sec.Data["secret_id"].(string)
+        <span class="cov5" title="7">v.secretID = sec.Data["secret_id"].(string)
         v.initRoleDone = true
+        /*
+        * Revoke the Root token.
+        * If a new Root Token is needed, it will need to be created
+        * using the unseal shards.
+         */
+        err = v.vaultClient.Auth().Token().RevokeSelf(v.vaultToken)
+        if smslogger.CheckError(err, "Revoke Root Token") != nil </span><span class="cov0" title="0">{
+                smslogger.WriteWarn("Unable to Revoke Token")
+        }</span><span class="cov5" title="7"> else {
+                // Revoked successfully and clear it
+                v.vaultToken = ""
+        }</span>
+
+        // Store the role-id and secret-id
+        // We will need this if SMS restarts
+        <span class="cov5" title="7">smsauth.WriteToFile(v.roleID, "auth/role")
+        smsauth.WriteToFile(v.secretID, "auth/secret")
+
         return nil</span>
 }
 
 // Function checkToken() gets called multiple times to create
 // temporary tokens
-func (v *Vault) checkToken() error <span class="cov10" title="24">{
+func (v *Vault) checkToken() error <span class="cov9" title="54">{
+
         v.Lock()
         defer v.Unlock()
 
         // Init Role if it is not yet done
         // Role needs to be created before token can be created
-        if v.initRoleDone == false </span><span class="cov0" title="0">{
-                err := v.initRole()
-                if err != nil </span><span class="cov0" title="0">{
-                        smslogger.WriteError(err.Error())
-                        return errors.New("Unable to initRole in checkToken")
-                }</span>
-        }
+        err := v.initRole()
+        if err != nil </span><span class="cov0" title="0">{
+                smslogger.WriteError(err.Error())
+                return errors.New("Unable to initRole in checkToken")
+        }</span>
 
         // Return immediately if token still has life
-        <span class="cov10" title="24">if v.vaultClient.Token() != "" &amp;&amp;
-                time.Since(v.vaultTempTokenTTL) &lt; time.Minute*50 </span><span class="cov9" title="23">{
+        <span class="cov9" title="54">if v.vaultClient.Token() != "" &amp;&amp;
+                time.Since(v.vaultTempTokenTTL) &lt; time.Minute*50 </span><span class="cov9" title="47">{
                 return nil
         }</span>
 
         // Create a temporary token using our roleID and secretID
-        <span class="cov1" title="1">out, err := v.vaultClient.Logical().Write("auth/approle/login",
+        <span class="cov5" title="7">out, err := v.vaultClient.Logical().Write("auth/approle/login",
                 map[string]interface{}{"role_id": v.roleID, "secret_id": v.secretID})
-        if err != nil </span><span class="cov0" title="0">{
-                smslogger.WriteError(err.Error())
+        if smslogger.CheckError(err, "Create Temp Token") != nil </span><span class="cov0" title="0">{
                 return errors.New("Unable to create Temporary Token for Role")
         }</span>
 
-        <span class="cov1" title="1">tok, err := out.TokenID()
+        <span class="cov5" title="7">tok, err := out.TokenID()
 
         v.vaultTempTokenTTL = time.Now()
         v.vaultClient.SetToken(tok)
@@ -655,31 +853,53 @@ func (v *Vault) checkToken() error <span class="cov10" title="24">{
 
 // vaultInit() is used to initialize the vault in cases where it is not
 // initialized. This happens once during intial bring up.
-func (v *Vault) initializeVault() error <span class="cov0" title="0">{
-        initReq := &amp;vaultapi.InitRequest{
-                SecretShares:    5,
+func (v *Vault) initializeVault() error <span class="cov2" title="2">{
+
+        // Check for vault init status and don't exit till it is initialized
+        for </span><span class="cov2" title="2">{
+                init, err := v.vaultClient.Sys().InitStatus()
+                if smslogger.CheckError(err, "Get Vault Init Status") != nil </span><span class="cov0" title="0">{
+                        smslogger.WriteInfo("Trying again in 10s...")
+                        time.Sleep(time.Second * 10)
+                        continue</span>
+                }
+                // Did not get any error
+                <span class="cov2" title="2">if init == true </span><span class="cov1" title="1">{
+                        smslogger.WriteInfo("Vault is already Initialized")
+                        return nil
+                }</span>
+
+                // init status is false
+                // break out of loop and finish initialization
+                <span class="cov1" title="1">smslogger.WriteInfo("Vault is not initialized. Initializing...")
+                break</span>
+        }
+
+        // Hardcoded this to 3. We should make this configurable
+        // in the future
+        <span class="cov1" title="1">initReq := &amp;vaultapi.InitRequest{
+                SecretShares:    3,
                 SecretThreshold: 3,
         }
 
         pbkey, prkey, err := smsauth.GeneratePGPKeyPair()
-        if err != nil </span><span class="cov0" title="0">{
+
+        if smslogger.CheckError(err, "Generating PGP Keys") != nil </span><span class="cov0" title="0">{
                 smslogger.WriteError("Error Generating PGP Keys. Vault Init will not use encryption!")
-        }</span><span class="cov0" title="0"> else {
-                initReq.PGPKeys = []string{pbkey, pbkey, pbkey, pbkey, pbkey}
+        }</span><span class="cov1" title="1"> else {
+                initReq.PGPKeys = []string{pbkey, pbkey, pbkey}
                 initReq.RootTokenPGPKey = pbkey
-                v.pgpPub = pbkey
-                v.pgpPr = prkey
         }</span>
 
-        <span class="cov0" title="0">resp, err := v.vaultClient.Sys().Init(initReq)
-        if err != nil </span><span class="cov0" title="0">{
-                smslogger.WriteError(err.Error())
+        <span class="cov1" title="1">resp, err := v.vaultClient.Sys().Init(initReq)
+        if smslogger.CheckError(err, "Initialize Vault") != nil </span><span class="cov0" title="0">{
                 return errors.New("FATAL: Unable to initialize Vault")
         }</span>
 
-        <span class="cov0" title="0">if resp != nil </span><span class="cov0" title="0">{
-                v.unsealShards = resp.KeysB64
-                v.rootToken = resp.RootToken
+        <span class="cov1" title="1">if resp != nil </span><span class="cov1" title="1">{
+                v.prkey = prkey
+                v.shards = resp.KeysB64
+                v.vaultToken, _ = smsauth.DecryptPGPString(resp.RootToken, prkey)
                 return nil
         }</span>
 
@@ -708,6 +928,7 @@ package config
 import (
         "encoding/json"
         "os"
+        smslogger "sms/log"
 )
 
 // SMSConfiguration loads up all the values that are used to configure
@@ -718,8 +939,10 @@ type SMSConfiguration struct {
         ServerCert string `json:"servercert"`
         ServerKey  string `json:"serverkey"`
 
-        VaultAddress string `json:"vaultaddress"`
-        VaultToken   string `json:"vaulttoken"`
+        BackendAddress            string `json:"smsdbaddress"`
+        VaultToken                string `json:"vaulttoken"`
+        DisableTLS                bool   `json:"disable_tls"`
+        BackendAddressEnvVariable string `json:"smsdburlenv"`
 }
 
 // SMSConfig is the structure that stores the configuration
@@ -734,11 +957,18 @@ func ReadConfigFile(file string) (*SMSConfiguration, error) <span class="cov10" 
                 }</span>
                 <span class="cov6" title="2">defer f.Close()
 
-                SMSConfig = &amp;SMSConfiguration{}
+                // Default behaviour is to enable TLS
+                SMSConfig = &amp;SMSConfiguration{DisableTLS: false}
                 decoder := json.NewDecoder(f)
                 err = decoder.Decode(SMSConfig)
                 if err != nil </span><span class="cov0" title="0">{
                         return nil, err
+                }</span>
+
+                <span class="cov6" title="2">if SMSConfig.BackendAddress == "" &amp;&amp; SMSConfig.BackendAddressEnvVariable != "" </span><span class="cov0" title="0">{
+                        // Get the value from ENV variable
+                        smslogger.WriteInfo("Using Environment Variable: " + SMSConfig.BackendAddressEnvVariable)
+                        SMSConfig.BackendAddress = os.Getenv(SMSConfig.BackendAddressEnvVariable)
                 }</span>
         }
 
@@ -785,29 +1015,24 @@ func (h handler) createSecretDomainHandler(w http.ResponseWriter, r *http.Reques
         var d smsbackend.SecretDomain
 
         err := json.NewDecoder(r.Body).Decode(&amp;d)
-        if err != nil </span><span class="cov0" title="0">{
-                smslogger.WriteError(err.Error())
+        if smslogger.CheckError(err, "CreateSecretDomainHandler") != nil </span><span class="cov0" title="0">{
                 http.Error(w, err.Error(), http.StatusBadRequest)
                 return
         }</span>
 
         <span class="cov6" title="3">dom, err := h.secretBackend.CreateSecretDomain(d.Name)
-        if err != nil </span><span class="cov0" title="0">{
-                smslogger.WriteError(err.Error())
-                http.Error(w, err.Error(), http.StatusInternalServerError)
-                return
-        }</span>
-
-        <span class="cov6" title="3">jdata, err := json.Marshal(dom)
-        if err != nil </span><span class="cov0" title="0">{
-                smslogger.WriteError(err.Error())
+        if smslogger.CheckError(err, "CreateSecretDomainHandler") != nil </span><span class="cov0" title="0">{
                 http.Error(w, err.Error(), http.StatusInternalServerError)
                 return
         }</span>
 
         <span class="cov6" title="3">w.Header().Set("Content-Type", "application/json")
         w.WriteHeader(http.StatusCreated)
-        w.Write(jdata)</span>
+        err = json.NewEncoder(w).Encode(dom)
+        if smslogger.CheckError(err, "CreateSecretDomainHandler") != nil </span><span class="cov0" title="0">{
+                http.Error(w, err.Error(), http.StatusInternalServerError)
+                return
+        }</span>
 }
 
 // deleteSecretDomainHandler deletes a secret domain with the name provided
@@ -816,8 +1041,7 @@ func (h handler) deleteSecretDomainHandler(w http.ResponseWriter, r *http.Reques
         domName := vars["domName"]
 
         err := h.secretBackend.DeleteSecretDomain(domName)
-        if err != nil </span><span class="cov0" title="0">{
-                smslogger.WriteError(err.Error())
+        if smslogger.CheckError(err, "DeleteSecretDomainHandler") != nil </span><span class="cov0" title="0">{
                 http.Error(w, err.Error(), http.StatusInternalServerError)
                 return
         }</span>
@@ -834,15 +1058,13 @@ func (h handler) createSecretHandler(w http.ResponseWriter, r *http.Request) <sp
         // Get secrets to be stored from body
         var b smsbackend.Secret
         err := json.NewDecoder(r.Body).Decode(&amp;b)
-        if err != nil </span><span class="cov0" title="0">{
-                smslogger.WriteError(err.Error())
+        if smslogger.CheckError(err, "CreateSecretHandler") != nil </span><span class="cov0" title="0">{
                 http.Error(w, err.Error(), http.StatusBadRequest)
                 return
         }</span>
 
         <span class="cov10" title="7">err = h.secretBackend.CreateSecret(domName, b)
-        if err != nil </span><span class="cov0" title="0">{
-                smslogger.WriteError(err.Error())
+        if smslogger.CheckError(err, "CreateSecretHandler") != nil </span><span class="cov0" title="0">{
                 http.Error(w, err.Error(), http.StatusInternalServerError)
                 return
         }</span>
@@ -857,21 +1079,17 @@ func (h handler) getSecretHandler(w http.ResponseWriter, r *http.Request) <span 
         secName := vars["secretName"]
 
         sec, err := h.secretBackend.GetSecret(domName, secName)
-        if err != nil </span><span class="cov0" title="0">{
-                smslogger.WriteError(err.Error())
-                http.Error(w, err.Error(), http.StatusInternalServerError)
-                return
-        }</span>
-
-        <span class="cov10" title="7">jdata, err := json.Marshal(sec)
-        if err != nil </span><span class="cov0" title="0">{
-                smslogger.WriteError(err.Error())
+        if smslogger.CheckError(err, "GetSecretHandler") != nil </span><span class="cov0" title="0">{
                 http.Error(w, err.Error(), http.StatusInternalServerError)
                 return
         }</span>
 
         <span class="cov10" title="7">w.Header().Set("Content-Type", "application/json")
-        w.Write(jdata)</span>
+        err = json.NewEncoder(w).Encode(sec)
+        if smslogger.CheckError(err, "GetSecretHandler") != nil </span><span class="cov0" title="0">{
+                http.Error(w, err.Error(), http.StatusInternalServerError)
+                return
+        }</span>
 }
 
 // listSecretHandler handles listing all secrets under a particular domain name
@@ -880,8 +1098,7 @@ func (h handler) listSecretHandler(w http.ResponseWriter, r *http.Request) <span
         domName := vars["domName"]
 
         secList, err := h.secretBackend.ListSecret(domName)
-        if err != nil </span><span class="cov0" title="0">{
-                smslogger.WriteError(err.Error())
+        if smslogger.CheckError(err, "ListSecretHandler") != nil </span><span class="cov0" title="0">{
                 http.Error(w, err.Error(), http.StatusInternalServerError)
                 return
         }</span>
@@ -893,15 +1110,12 @@ func (h handler) listSecretHandler(w http.ResponseWriter, r *http.Request) <span
                 secList,
         }
 
-        jdata, err := json.Marshal(retStruct)
-        if err != nil </span><span class="cov0" title="0">{
-                smslogger.WriteError(err.Error())
+        w.Header().Set("Content-Type", "application/json")
+        err = json.NewEncoder(w).Encode(retStruct)
+        if smslogger.CheckError(err, "ListSecretHandler") != nil </span><span class="cov0" title="0">{
                 http.Error(w, err.Error(), http.StatusInternalServerError)
                 return
         }</span>
-
-        <span class="cov6" title="3">w.Header().Set("Content-Type", "application/json")
-        w.Write(jdata)</span>
 }
 
 // deleteSecretHandler handles deleting a secret by given domain name and secret name
@@ -911,37 +1125,34 @@ func (h handler) deleteSecretHandler(w http.ResponseWriter, r *http.Request) <sp
         secName := vars["secretName"]
 
         err := h.secretBackend.DeleteSecret(domName, secName)
-        if err != nil </span><span class="cov0" title="0">{
-                smslogger.WriteError(err.Error())
+        if smslogger.CheckError(err, "DeleteSecretHandler") != nil </span><span class="cov0" title="0">{
                 http.Error(w, err.Error(), http.StatusInternalServerError)
                 return
         }</span>
-}
 
-// struct that tracks various status items for SMS and backend
-type backendStatus struct {
-        Seal bool `json:"sealstatus"`
+        <span class="cov10" title="7">w.WriteHeader(http.StatusNoContent)</span>
 }
 
 // statusHandler returns information related to SMS and SMS backend services
-func (h handler) statusHandler(w http.ResponseWriter, r *http.Request) <span class="cov6" title="3">{
+func (h handler) statusHandler(w http.ResponseWriter, r *http.Request) <span class="cov7" title="4">{
         s, err := h.secretBackend.GetStatus()
-        if err != nil </span><span class="cov0" title="0">{
-                smslogger.WriteError(err.Error())
+        if smslogger.CheckError(err, "StatusHandler") != nil </span><span class="cov0" title="0">{
                 http.Error(w, err.Error(), http.StatusInternalServerError)
                 return
         }</span>
 
-        <span class="cov6" title="3">status := backendStatus{Seal: s}
-        jdata, err := json.Marshal(status)
-        if err != nil </span><span class="cov0" title="0">{
-                smslogger.WriteError(err.Error())
+        <span class="cov7" title="4">status := struct {
+                Seal bool `json:"sealstatus"`
+        }{
+                s,
+        }
+
+        w.Header().Set("Content-Type", "application/json")
+        err = json.NewEncoder(w).Encode(status)
+        if smslogger.CheckError(err, "StatusHandler") != nil </span><span class="cov0" title="0">{
                 http.Error(w, err.Error(), http.StatusInternalServerError)
                 return
         }</span>
-
-        <span class="cov6" title="3">w.Header().Set("Content-Type", "application/json")
-        w.Write(jdata)</span>
 }
 
 // loginHandler handles login via password and username
@@ -961,15 +1172,53 @@ func (h handler) unsealHandler(w http.ResponseWriter, r *http.Request) <span cla
         decoder := json.NewDecoder(r.Body)
         decoder.DisallowUnknownFields()
         err := decoder.Decode(&amp;inp)
-        if err != nil </span><span class="cov0" title="0">{
-                smslogger.WriteError(err.Error())
+        if smslogger.CheckError(err, "UnsealHandler") != nil </span><span class="cov0" title="0">{
                 http.Error(w, "Bad input JSON", http.StatusBadRequest)
                 return
         }</span>
 
         <span class="cov0" title="0">err = h.secretBackend.Unseal(inp.UnsealShard)
-        if err != nil </span><span class="cov0" title="0">{
-                smslogger.WriteError(err.Error())
+        if smslogger.CheckError(err, "UnsealHandler") != nil </span><span class="cov0" title="0">{
+                http.Error(w, err.Error(), http.StatusInternalServerError)
+                return
+        }</span>
+}
+
+// registerHandler allows the quorum clients to register with SMS
+// with their PGP public keys that are then used by sms for backend
+// initialization
+func (h handler) registerHandler(w http.ResponseWriter, r *http.Request) <span class="cov1" title="1">{
+        // Get shards to be used for unseal
+        type registerStruct struct {
+                PGPKey   string `json:"pgpkey"`
+                QuorumID string `json:"quorumid"`
+        }
+
+        var inp registerStruct
+        decoder := json.NewDecoder(r.Body)
+        decoder.DisallowUnknownFields()
+        err := decoder.Decode(&amp;inp)
+        if smslogger.CheckError(err, "RegisterHandler") != nil </span><span class="cov0" title="0">{
+                http.Error(w, "Bad input JSON", http.StatusBadRequest)
+                return
+        }</span>
+
+        <span class="cov1" title="1">sh, err := h.secretBackend.RegisterQuorum(inp.PGPKey)
+        if smslogger.CheckError(err, "RegisterHandler") != nil </span><span class="cov0" title="0">{
+                http.Error(w, err.Error(), http.StatusInternalServerError)
+                return
+        }</span>
+
+        // Creating a struct for return data
+        <span class="cov1" title="1">shStruct := struct {
+                Shard string `json:"shard"`
+        }{
+                sh,
+        }
+
+        w.Header().Set("Content-Type", "application/json")
+        err = json.NewEncoder(w).Encode(shStruct)
+        if smslogger.CheckError(err, "RegisterHandler") != nil </span><span class="cov0" title="0">{
                 http.Error(w, err.Error(), http.StatusInternalServerError)
                 return
         }</span>
@@ -987,8 +1236,9 @@ func CreateRouter(b smsbackend.SecretBackend) http.Handler <span class="cov4" ti
 
         // Initialization APIs which will be used by quorum client
         // to unseal and to provide root token to sms service
-        router.HandleFunc("/v1/sms/status", h.statusHandler).Methods("GET")
-        router.HandleFunc("/v1/sms/unseal", h.unsealHandler).Methods("POST")
+        router.HandleFunc("/v1/sms/quorum/status", h.statusHandler).Methods("GET")
+        router.HandleFunc("/v1/sms/quorum/unseal", h.unsealHandler).Methods("POST")
+        router.HandleFunc("/v1/sms/quorum/register", h.registerHandler).Methods("POST")
 
         router.HandleFunc("/v1/sms/domain", h.createSecretDomainHandler).Methods("POST")
         router.HandleFunc("/v1/sms/domain/{domName}", h.deleteSecretDomainHandler).Methods("DELETE")
@@ -1021,52 +1271,84 @@ func CreateRouter(b smsbackend.SecretBackend) http.Handler <span class="cov4" ti
 package log
 
 import (
+        "fmt"
         "log"
         "os"
 )
 
-var errLogger *log.Logger
-var warnLogger *log.Logger
-var infoLogger *log.Logger
+var errL, warnL, infoL *log.Logger
+var stdErr, stdWarn, stdInfo *log.Logger
 
 // Init will be called by sms.go before any other packages use it
-func Init(filePath string) <span class="cov8" title="1">{
-        f, err := os.Create(filePath)
-        if err != nil </span><span class="cov0" title="0">{
-                log.Println("Unable to create a log file")
-                log.Println(err)
-                errLogger = log.New(os.Stderr, "ERROR: ", log.Lshortfile|log.LstdFlags)
-                warnLogger = log.New(os.Stdout, "WARNING: ", log.Lshortfile|log.LstdFlags)
-                infoLogger = log.New(os.Stdout, "INFO: ", log.Lshortfile|log.LstdFlags)
-        }</span><span class="cov8" title="1"> else {
-                errLogger = log.New(f, "ERROR: ", log.Lshortfile|log.LstdFlags)
-                warnLogger = log.New(f, "WARNING: ", log.Lshortfile|log.LstdFlags)
-                infoLogger = log.New(f, "INFO: ", log.Lshortfile|log.LstdFlags)
+func Init(filePath string) <span class="cov1" title="1">{
+
+        stdErr = log.New(os.Stderr, "ERROR: ", log.Lshortfile|log.LstdFlags)
+        stdWarn = log.New(os.Stdout, "WARNING: ", log.Lshortfile|log.LstdFlags)
+        stdInfo = log.New(os.Stdout, "INFO: ", log.Lshortfile|log.LstdFlags)
+
+        if filePath == "" </span><span class="cov0" title="0">{
+                // We will just to std streams
+                return
         }</span>
+
+        <span class="cov1" title="1">f, err := os.Create(filePath)
+        if err != nil </span><span class="cov0" title="0">{
+                stdErr.Println("Unable to create log file: " + err.Error())
+                return
+        }</span>
+
+        <span class="cov1" title="1">errL = log.New(f, "ERROR: ", log.Lshortfile|log.LstdFlags)
+        warnL = log.New(f, "WARNING: ", log.Lshortfile|log.LstdFlags)
+        infoL = log.New(f, "INFO: ", log.Lshortfile|log.LstdFlags)</span>
 }
 
 // WriteError writes output to the writer we have
-// defined durint its creation with ERROR prefix
+// defined during its creation with ERROR prefix
 func WriteError(msg string) <span class="cov0" title="0">{
-        if errLogger != nil </span><span class="cov0" title="0">{
-                errLogger.Println(msg)
+        if errL != nil </span><span class="cov0" title="0">{
+                errL.Output(2, fmt.Sprintln(msg))
+        }</span>
+        <span class="cov0" title="0">if stdErr != nil </span><span class="cov0" title="0">{
+                stdErr.Output(2, fmt.Sprintln(msg))
         }</span>
 }
 
 // WriteWarn writes output to the writer we have
-// defined durint its creation with WARNING prefix
+// defined during its creation with WARNING prefix
 func WriteWarn(msg string) <span class="cov0" title="0">{
-        if warnLogger != nil </span><span class="cov0" title="0">{
-                warnLogger.Println(msg)
+        if warnL != nil </span><span class="cov0" title="0">{
+                warnL.Output(2, fmt.Sprintln(msg))
+        }</span>
+        <span class="cov0" title="0">if stdWarn != nil </span><span class="cov0" title="0">{
+                stdWarn.Output(2, fmt.Sprintln(msg))
         }</span>
 }
 
 // WriteInfo writes output to the writer we have
-// defined durint its creation with INFO prefix
-func WriteInfo(msg string) <span class="cov0" title="0">{
-        if infoLogger != nil </span><span class="cov0" title="0">{
-                infoLogger.Println(msg)
+// defined during its creation with INFO prefix
+func WriteInfo(msg string) <span class="cov1" title="1">{
+        if infoL != nil </span><span class="cov1" title="1">{
+                infoL.Output(2, fmt.Sprintln(msg))
         }</span>
+        <span class="cov1" title="1">if stdInfo != nil </span><span class="cov1" title="1">{
+                stdInfo.Output(2, fmt.Sprintln(msg))
+        }</span>
+}
+
+//CheckError is a helper function to reduce
+//repitition of error checkign blocks of code
+func CheckError(err error, topic string) error <span class="cov10" title="116">{
+        if err != nil </span><span class="cov1" title="1">{
+                msg := topic + ": " + err.Error()
+                if errL != nil </span><span class="cov1" title="1">{
+                        errL.Output(2, fmt.Sprintln(msg))
+                }</span>
+                <span class="cov1" title="1">if stdErr != nil </span><span class="cov1" title="1">{
+                        stdErr.Output(2, fmt.Sprintln(msg))
+                }</span>
+                <span class="cov1" title="1">return err</span>
+        }
+        <span class="cov9" title="115">return nil</span>
 }
 </pre>
 		
@@ -1119,16 +1401,9 @@ func main() <span class="cov8" title="1">{
 
         <span class="cov8" title="1">httpRouter := smshandler.CreateRouter(backendImpl)
 
-        // TODO: Use CA certificate from AAF
-        tlsConfig, err := smsauth.GetTLSConfig(smsConf.CAFile)
-        if err != nil </span><span class="cov0" title="0">{
-                log.Fatal(err)
-        }</span>
-
-        <span class="cov8" title="1">httpServer := &amp;http.Server{
-                Handler:   httpRouter,
-                Addr:      ":10443",
-                TLSConfig: tlsConfig,
+        httpServer := &amp;http.Server{
+                Handler: httpRouter,
+                Addr:    ":10443",
         }
 
         // Listener for SIGINT so that it returns cleanly
@@ -1141,8 +1416,22 @@ func main() <span class="cov8" title="1">{
                 close(connectionsClose)
         }</span>()
 
-        <span class="cov8" title="1">err = httpServer.ListenAndServeTLS(smsConf.ServerCert, smsConf.ServerKey)
-        if err != nil &amp;&amp; err != http.ErrServerClosed </span><span class="cov0" title="0">{
+        // Start in TLS mode by default
+        <span class="cov8" title="1">if smsConf.DisableTLS == true </span><span class="cov0" title="0">{
+                smslogger.WriteWarn("TLS is Disabled")
+                err = httpServer.ListenAndServe()
+        }</span><span class="cov8" title="1"> else {
+                // TODO: Use CA certificate from AAF
+                tlsConfig, err := smsauth.GetTLSConfig(smsConf.CAFile)
+                if err != nil </span><span class="cov0" title="0">{
+                        log.Fatal(err)
+                }</span>
+
+                <span class="cov8" title="1">httpServer.TLSConfig = tlsConfig
+                err = httpServer.ListenAndServeTLS(smsConf.ServerCert, smsConf.ServerKey)</span>
+        }
+
+        <span class="cov8" title="1">if err != nil &amp;&amp; err != http.ErrServerClosed </span><span class="cov0" title="0">{
                 log.Fatal(err)
         }</span>
 

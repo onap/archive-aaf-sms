@@ -48,7 +48,7 @@ func (b *TestBackend) Unseal(shard string) error {
 }
 
 func (b *TestBackend) RegisterQuorum(pgpkey string) (string, error) {
-	return "", nil
+	return "N8z4eD2Zgv0eDJrgkkUq3Lh5n2p6Y1Zsui1NIHePlLU=", nil
 }
 
 func (b *TestBackend) GetSecret(dom string, sec string) (smsbackend.Secret, error) {
@@ -127,8 +127,49 @@ func TestStatusHandler(t *testing.T) {
 	}
 }
 
+func TestRegisterHandler(t *testing.T) {
+	body := `{
+		"pgpkey":"asdasdasdasdgkjgljoiwera",
+		"quorumid":"123e4567-e89b-12d3-a456-426655440000"
+	}`
+	reader := strings.NewReader(body)
+	req, err := http.NewRequest("POST", "/v1/sms/quorum/register", reader)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	rr := httptest.NewRecorder()
+	hr := http.HandlerFunc(h.registerHandler)
+
+	hr.ServeHTTP(rr, req)
+
+	ret := rr.Code
+	if ret != http.StatusOK {
+		t.Errorf("registerHandler returned wrong status code: %v vs %v",
+			ret, http.StatusOK)
+	}
+
+	expected := struct {
+		Shard string `json:"shard"`
+	}{
+		"N8z4eD2Zgv0eDJrgkkUq3Lh5n2p6Y1Zsui1NIHePlLU=",
+	}
+	got := struct {
+		Shard string `json:"shard"`
+	}{}
+
+	json.NewDecoder(rr.Body).Decode(&got)
+
+	if reflect.DeepEqual(expected, got) == false {
+		t.Errorf("statusHandler returned unexpected body: got %v vs %v",
+			rr.Body.String(), expected)
+	}
+}
+
 func TestUnsealHandler(t *testing.T) {
-	req, err := http.NewRequest("GET", "/v1/sms/quorum/unseal", nil)
+	body := `{"unsealshard":"N8z4eD2Zgv0eDJrgkkUq3Lh5n2p6Y1Zsui1NIHePlLU="}`
+	reader := strings.NewReader(body)
+	req, err := http.NewRequest("POST", "/v1/sms/quorum/unseal", reader)
 	if err != nil {
 		t.Fatal(err)
 	}
