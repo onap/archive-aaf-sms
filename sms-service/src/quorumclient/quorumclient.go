@@ -37,13 +37,13 @@ func loadPGPKeys(prKeyPath string, pbKeyPath string) (string, string, error) {
 	var pbkey, prkey string
 	generated := false
 	prkey, err := smsauth.ReadFromFile(prKeyPath)
-	if err != nil {
-		smslogger.WriteWarn("No Private Key found. Generating...")
+	if smslogger.CheckError(err, "LoadPGP Private Key") != nil {
+		smslogger.WriteInfo("No Private Key found. Generating...")
 		pbkey, prkey, _ = smsauth.GeneratePGPKeyPair()
 		generated = true
 	} else {
 		pbkey, err = smsauth.ReadFromFile(pbKeyPath)
-		if err != nil {
+		if smslogger.CheckError(err, "LoadPGP Public Key") != nil {
 			smslogger.WriteWarn("No Public Key found. Generating...")
 			pbkey, prkey, _ = smsauth.GeneratePGPKeyPair()
 			generated = true
@@ -70,7 +70,7 @@ func main() {
 	prKeyPath := filepath.Join("auth", podName, "prkey")
 	shardPath := filepath.Join("auth", podName, "shard")
 
-	smslogger.Init("")
+	smslogger.Init("quorum.log")
 	smslogger.WriteInfo("Starting Log for Quorum Client")
 
 	/*
@@ -80,7 +80,7 @@ func main() {
 		In Kubernetes, pod restarts will also change the hostname
 	*/
 	myID, err := smsauth.ReadFromFile(idFilePath)
-	if err != nil {
+	if smslogger.CheckError(err, "Read ID") != nil {
 		smslogger.WriteWarn("Unable to find an ID for this client. Generating...")
 		myID, _ = uuid.GenerateUUID()
 		smsauth.WriteToFile(myID, idFilePath)
@@ -93,7 +93,7 @@ func main() {
 	*/
 	registrationDone := true
 	myShard, err := smsauth.ReadFromFile(shardPath)
-	if err != nil {
+	if smslogger.CheckError(err, "Read Shard") != nil {
 		smslogger.WriteWarn("Unable to find a shard file. Registering with SMS...")
 		registrationDone = false
 	}
@@ -160,8 +160,7 @@ func main() {
 
 		//URL and Port is configured in config file
 		response, err := client.Get(cfg.BackEndURL + "/v1/sms/quorum/status")
-		if err != nil {
-			smslogger.WriteError("Unable to connect to SMS. Retrying...")
+		if smslogger.CheckError(err, "Connect to SMS") != nil {
 			continue
 		}
 
@@ -178,8 +177,7 @@ func main() {
 			if !registrationDone {
 				body := strings.NewReader(`{"pgpkey":"` + pbkey + `","quorumid":"` + myID + `"}`)
 				res, err := client.Post(cfg.BackEndURL+"/v1/sms/quorum/register", "application/json", body)
-				if err != nil {
-					smslogger.WriteError("Ran into error during registration. Retrying...")
+				if smslogger.CheckError(err, "Register with SMS") != nil {
 					continue
 				}
 				registrationDone = true
@@ -195,8 +193,8 @@ func main() {
 			body := strings.NewReader(`{"unsealshard":"` + decShard + `"}`)
 			//URL and PORT is configured via config file
 			response, err = client.Post(cfg.BackEndURL+"/v1/sms/quorum/unseal", "application/json", body)
-			if err != nil {
-				smslogger.WriteError("Error unsealing vault. Retrying... " + err.Error())
+			if smslogger.CheckError(err, "Unsealing Vault") != nil {
+				continue
 			}
 		}
 	}

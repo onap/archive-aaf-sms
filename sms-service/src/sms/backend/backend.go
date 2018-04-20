@@ -60,8 +60,7 @@ func InitSecretBackend() (SecretBackend, error) {
 	}
 
 	err := backendImpl.Init()
-	if err != nil {
-		smslogger.WriteError(err.Error())
+	if smslogger.CheckError(err, "InitSecretBackend") != nil {
 		return nil, err
 	}
 

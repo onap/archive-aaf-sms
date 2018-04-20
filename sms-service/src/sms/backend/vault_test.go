@@ -17,9 +17,11 @@
 package backend
 
 import (
+	vaultapi "github.com/hashicorp/vault/api"
 	credAppRole "github.com/hashicorp/vault/builtin/credential/approle"
 	vaulthttp "github.com/hashicorp/vault/http"
 	vaultlogical "github.com/hashicorp/vault/logical"
+	vaultinmem "github.com/hashicorp/vault/physical/inmem"
 	vaulttesting "github.com/hashicorp/vault/vault"
 	"reflect"
 	smslog "sms/log"
@@ -227,5 +229,41 @@ func TestDeleteSecret(t *testing.T) {
 	err = v.DeleteSecret("testdomain", secret.Name)
 	if err != nil {
 		t.Fatal("DeleteSecret: Error Creating secret")
+	}
+}
+
+func TestInitializeVault(t *testing.T) {
+
+	inm, err := vaultinmem.NewInmem(nil, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	core, err := vaulttesting.NewCore(&vaulttesting.CoreConfig{
+		DisableMlock: true,
+		DisableCache: true,
+		Physical:     inm,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	ln, addr := vaulthttp.TestServer(t, core)
+	defer ln.Close()
+
+	client, err := vaultapi.NewClient(&vaultapi.Config{
+		Address: addr,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	v := &Vault{}
+	v.initVaultClient()
+	v.vaultClient = client
+
+	err = v.initializeVault()
+	if err != nil {
+		t.Fatal("InitializeVault: Error initializing Vault")
 	}
 }
