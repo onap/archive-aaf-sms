@@ -24,7 +24,11 @@ public class ClientTestRunner {
     public static void main(String[] args) {
         Result r = JUnitCore.runClasses(
             SmsCreateDomainTest.class,
-            SmsDeleteDomainTest.class
+            SmsDeleteDomainTest.class,
+            SmsStoreSecretTest.class,
+            SmsGetSecretNamesTest.class,
+            SmsGetSecretTest.class,
+            SmsDeleteSecretTest.class
         );
 
         for( Failure f : r.getFailures()) {
