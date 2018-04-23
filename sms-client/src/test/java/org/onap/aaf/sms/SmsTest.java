@@ -60,6 +60,39 @@ public class SmsTest extends SmsClient {
                         return(resp);
                     }
                     resp.setResponse(m);
+                } else {
+                    if ( t.matches("(.*)/v1/sms/(.*)/secret") ) {
+                        resp.setSuccess(true);
+                        resp.setResponseCode(201);
+                    }
+                }
+            break;
+            case "GET":
+                if ( t.matches("(.*)/v1/sms/(.*)/secret") ) {
+                    resp.setSuccess(true);
+                    resp.setResponseCode(200);
+                    String jstr = "{\"secretnames\":[\"testsec1\",\"newtest\"]}";
+                    try {
+                        m = strtomap(jstr);
+                    } catch ( Exception e ) {
+                        resp.setResponse(null);
+                        return(resp);
+                    }
+                    resp.setResponse(m);
+                } else {
+                    if ( t.matches("(.*)/v1/sms/(.*)/secret/testsec1")) {
+                        resp.setSuccess(true);
+                        resp.setResponseCode(200);
+                        String js = "{\"name\":\"testsec1\",\"values\":{\"username\":\"dbuser\",\"passwd\":\"jdX784i-5k\"}}";
+                        try {
+                            m = strtomap(js);
+                            Map<String, Object> sm = (Map<String, Object>)m.get("values");
+                        } catch ( Exception e ) {
+                            resp.setResponse(null);
+                            return(resp);
+                        }
+                        resp.setResponse(m);
+                    }
                 }
             break;
             case "DELETE":
@@ -68,7 +101,7 @@ public class SmsTest extends SmsClient {
                     resp.setSuccess(true);
                     resp.setResponseCode(204);
                     resp.setResponse(null);
-                }
+                } 
             break;
 
         }
