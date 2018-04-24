@@ -6,7 +6,7 @@ cd ${DOCKER_BUILD_DIR}
 
 BUILD_ARGS="--no-cache"
 ORG="onap"
-VERSION="1.1.0"
+VERSION="2.0.0"
 PROJECT="aaf"
 IMAGE="sms"
 DOCKER_REPOSITORY="nexus3.onap.org:10003"
@@ -48,7 +48,6 @@ function push_image {
     docker push ${IMAGE_NAME}:latest
 
     push_image_tag ${IMAGE_NAME}:${VERSION}-SNAPSHOT-latest
-    push_image_tag ${IMAGE_NAME}:${VERSION}-STAGING-latest
 }
 
 generate_binary
