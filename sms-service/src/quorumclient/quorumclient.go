@@ -64,11 +64,14 @@ func loadPGPKeys(prKeyPath string, pbKeyPath string) (string, string, error) {
 //calls necessary initialization endpoints on the
 //SMS webservice
 func main() {
-	podName := os.Getenv("HOSTNAME")
-	idFilePath := filepath.Join("auth", podName, "id")
-	pbKeyPath := filepath.Join("auth", podName, "pbkey")
-	prKeyPath := filepath.Join("auth", podName, "prkey")
-	shardPath := filepath.Join("auth", podName, "shard")
+	folderName := os.Getenv("HOSTNAME")
+	//Make sure to create the folder. It is not guaranteed to exist
+	os.MkdirAll(folderName, 0700)
+
+	idFilePath := filepath.Join("auth", folderName, "id")
+	pbKeyPath := filepath.Join("auth", folderName, "pbkey")
+	prKeyPath := filepath.Join("auth", folderName, "prkey")
+	shardPath := filepath.Join("auth", folderName, "shard")
 
 	smslogger.Init("quorum.log")
 	smslogger.WriteInfo("Starting Log for Quorum Client")
