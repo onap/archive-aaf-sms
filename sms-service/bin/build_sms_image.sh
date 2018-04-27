@@ -28,6 +28,7 @@ function generate_binary {
 }
 
 function copy_certificates {
+    cp ../src/sms/auth/aaf_root_ca.cer .
     cp ../src/sms/auth/aaf-sms.api.simpledemo.onap.org.pem .
     cp ../src/sms/auth/aaf-sms.api.simpledemo.onap.org.pr .
 }
@@ -35,7 +36,8 @@ function copy_certificates {
 function cleanup {
     rm sms
     rm aaf-sms.api.simpledemo.onap.org.pem
-    rm af-sms.api.simpledemo.onap.org.pr
+    rm aaf-sms.api.simpledemo.onap.org.pr
+    rm aaf_root_ca.cer 
 }
 
 function build_image {
