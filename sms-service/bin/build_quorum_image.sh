@@ -27,8 +27,13 @@ function generate_binary {
     cp ../target/quorumclient .
 }
 
-function remove_binary {
+function copy_certificates {
+    cp ../src/sms/auth/aaf_root_ca.cer .
+}
+
+function cleanup {
     rm quorumclient
+    rm aaf_root_ca.cer
 }
 
 function build_image {
@@ -51,6 +56,7 @@ function push_image {
 }
 
 generate_binary
+copy_certificates
 build_image
 push_image
-remove_binary
+cleanup

@@ -1,6 +1,6 @@
 {
     "url":"https://aaf-sms:10443",
-    "cafile": "auth/selfsignedca.pem",
+    "cafile": "cert/aaf_root_ca.cer",
     "clientcert":"client.cert",
     "clientkey":"client.key",
     "timeout":"10s"

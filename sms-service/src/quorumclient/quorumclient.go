@@ -64,14 +64,14 @@ func loadPGPKeys(prKeyPath string, pbKeyPath string) (string, string, error) {
 //calls necessary initialization endpoints on the
 //SMS webservice
 func main() {
-	folderName := os.Getenv("HOSTNAME")
+	folderName := filepath.Join("auth", os.Getenv("HOSTNAME"))
 	//Make sure to create the folder. It is not guaranteed to exist
 	os.MkdirAll(folderName, 0700)
 
-	idFilePath := filepath.Join("auth", folderName, "id")
-	pbKeyPath := filepath.Join("auth", folderName, "pbkey")
-	prKeyPath := filepath.Join("auth", folderName, "prkey")
-	shardPath := filepath.Join("auth", folderName, "shard")
+	idFilePath := filepath.Join(folderName, "id")
+	pbKeyPath := filepath.Join(folderName, "pbkey")
+	prKeyPath := filepath.Join(folderName, "prkey")
+	shardPath := filepath.Join(folderName, "shard")
 
 	smslogger.Init("quorum.log")
 	smslogger.WriteInfo("Starting Log for Quorum Client")
@@ -138,11 +138,14 @@ func main() {
 		caCertPool := x509.NewCertPool()
 		caCertPool.AppendCertsFromPEM(caCert)
 
-		// Load the client certificate files
-		//cert, err := tls.LoadX509KeyPair(cfg.ClientCert, cfg.ClientKey)
-		//if err != nil {
-		//	log.Fatalf("Error while loading key pair %v ", err)
-		//}
+		/*
+			Support Client certificates once we have auto generated certs
+			Load the client certificate files
+			cert, err := tls.LoadX509KeyPair(cfg.ClientCert, cfg.ClientKey)
+			if err != nil {
+				log.Fatalf("Error while loading key pair %v ", err)
+			}
+		*/
 
 		transport.TLSClientConfig = &tls.Config{
 			MinVersion: tls.VersionTLS12,
@@ -171,7 +174,6 @@ func main() {
 			Seal bool `json:"sealstatus"`
 		}
 		err = json.NewDecoder(response.Body).Decode(&data)
-
 		sealed := data.Seal
 
 		// Unseal the vault if sealed

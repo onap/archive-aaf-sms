@@ -27,8 +27,15 @@ function generate_binary {
     cp ../target/sms .
 }
 
-function remove_binary {
+function copy_certificates {
+    cp ../src/sms/auth/aaf-sms.api.simpledemo.onap.org.pem .
+    cp ../src/sms/auth/aaf-sms.api.simpledemo.onap.org.pr .
+}
+
+function cleanup {
     rm sms
+    rm aaf-sms.api.simpledemo.onap.org.pem
+    rm af-sms.api.simpledemo.onap.org.pr
 }
 
 function build_image {
@@ -51,6 +58,7 @@ function push_image {
 }
 
 generate_binary
+copy_certificates
 build_image
 push_image
-remove_binary
+cleanup
