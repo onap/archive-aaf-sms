@@ -105,12 +105,13 @@ func main() {
 
 	//Struct to read json configuration file
 	type config struct {
-		BackEndURL string `json:"url"`
-		CAFile     string `json:"cafile"`
-		ClientCert string `json:"clientcert"`
-		ClientKey  string `json:"clientkey"`
-		TimeOut    string `json:"timeout"`
-		DisableTLS bool   `json:"disable_tls"`
+		BackEndURL        string `json:"url"`
+		BackendServerName string `json:"servername"`
+		CAFile            string `json:"cafile"`
+		ClientCert        string `json:"clientcert"`
+		ClientKey         string `json:"clientkey"`
+		TimeOut           string `json:"timeout"`
+		DisableTLS        bool   `json:"disable_tls"`
 	}
 
 	//Load the config File for reading
@@ -153,6 +154,12 @@ func main() {
 			//Enable once we have proper client certificates
 			//Certificates: []tls.Certificate{cert},
 		}
+	}
+
+	// Allow https connection in k8s where servername does not match
+	// certificate server name
+	if cfg.BackendServerName != "" {
+		transport.TLSClientConfig.ServerName = cfg.BackendServerName
 	}
 
 	client := &http.Client{
