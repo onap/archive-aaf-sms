@@ -1,0 +1,9 @@
+{
+  "server": true,
+  "log_level": "INFO",
+  "data_dir": "/consul/data",
+  "ports": {
+    "http": 8500,
+    "https": -1
+  }
+}

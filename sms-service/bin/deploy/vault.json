@@ -1,0 +1,10 @@
+storage "consul" {
+  address = "sms-consul:8500"
+  path = "smsvault"
+}
+
+listener "tcp" {
+  address = "[::]:8200"
+  tls_disable = true
+}
+disable_mlock = true
