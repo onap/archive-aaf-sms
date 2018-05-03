@@ -40,7 +40,7 @@ func (b *TestBackend) Init() error {
 }
 
 func (b *TestBackend) GetStatus() (bool, error) {
-	return true, nil
+	return false, nil
 }
 
 func (b *TestBackend) Unseal(shard string) error {
@@ -111,19 +111,21 @@ func TestStatusHandler(t *testing.T) {
 			ret, http.StatusOK)
 	}
 
+	//Check returned body
 	expected := struct {
 		Seal bool `json:"sealstatus"`
 	}{}
 	got := struct {
 		Seal bool `json:"sealstatus"`
 	}{}
-	expectedStr := strings.NewReader(`{"sealstatus":true}`)
+	gotstr := rr.Body.String()
+	expectedStr := strings.NewReader(`{"sealstatus":false}`)
 	json.NewDecoder(expectedStr).Decode(&expected)
 	json.NewDecoder(rr.Body).Decode(&got)
 
 	if reflect.DeepEqual(expected, got) == false {
-		t.Errorf("statusHandler returned unexpected body: got %v vs %v",
-			rr.Body.String(), expectedStr)
+		t.Errorf("statusHandler returned unexpected body: got %s vs %v",
+			gotstr, expectedStr)
 	}
 }
 
@@ -149,6 +151,7 @@ func TestRegisterHandler(t *testing.T) {
 			ret, http.StatusOK)
 	}
 
+	//Check returned body
 	expected := struct {
 		Shard string `json:"shard"`
 	}{
@@ -202,6 +205,7 @@ func TestCreateSecretDomainHandler(t *testing.T) {
 		t.Errorf("Expected statusCreated return code. Got: %v", rr.Code)
 	}
 
+	//Check returned body
 	expected := smsbackend.SecretDomain{
 		UUID: "123e4567-e89b-12d3-a456-426655440000",
 		Name: "testdomain",
@@ -285,6 +289,7 @@ func TestGetSecretHandler(t *testing.T) {
 		t.Errorf("Expected statusCreated return code. Got: %v", rr.Code)
 	}
 
+	//Check returned body
 	expected := smsbackend.Secret{
 		Name: "testsecret",
 		Values: map[string]interface{}{
@@ -316,6 +321,7 @@ func TestListSecretHandler(t *testing.T) {
 		t.Errorf("Expected statusCreated return code. Got: %v", rr.Code)
 	}
 
+	//Check returned body
 	var expected = struct {
 		SecretNames []string `json:"secretnames"`
 	}{
@@ -331,5 +337,24 @@ func TestListSecretHandler(t *testing.T) {
 	if reflect.DeepEqual(expected, got) == false {
 		t.Errorf("CreateSecretDomainHandler returned unexpected body: got: %v"+
 			" expected: %v", got, expected)
+	}
+}
+
+func TestHealthCheckHandler(t *testing.T) {
+	req, err := http.NewRequest("GET", "/v1/sms/healthcheck", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	rr := httptest.NewRecorder()
+	hr := http.HandlerFunc(h.healthCheckHandler)
+
+	hr.ServeHTTP(rr, req)
+
+	ret := rr.Code
+	if ret != http.StatusOK {
+		t.Errorf("healthCheckHandler returned wrong status code: %v vs %v",
+			ret, http.StatusOK)
+		t.Errorf("%s", rr.Body.String())
 	}
 }

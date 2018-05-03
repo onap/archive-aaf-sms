@@ -82,7 +82,7 @@ func WriteInfo(msg string) {
 }
 
 //CheckError is a helper function to reduce
-//repitition of error checkign blocks of code
+//repetition of error checking blocks of code
 func CheckError(err error, topic string) error {
 	if err != nil {
 		msg := topic + ": " + err.Error()

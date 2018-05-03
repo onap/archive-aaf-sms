@@ -21,6 +21,7 @@ import (
 	"github.com/gorilla/mux"
 	"net/http"
 
+	uuid "github.com/hashicorp/go-uuid"
 	smsbackend "sms/backend"
 	smslogger "sms/log"
 )
@@ -210,6 +211,7 @@ func (h handler) unsealHandler(w http.ResponseWriter, r *http.Request) {
 // with their PGP public keys that are then used by sms for backend
 // initialization
 func (h handler) registerHandler(w http.ResponseWriter, r *http.Request) {
+
 	// Get shards to be used for unseal
 	type registerStruct struct {
 		PGPKey   string `json:"pgpkey"`
@@ -246,6 +248,39 @@ func (h handler) registerHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// healthCheckHandler runs a few commands on the backend and returns
+// OK or not depending on the status of the backend
+func (h handler) healthCheckHandler(w http.ResponseWriter, r *http.Request) {
+
+	sealed, err := h.secretBackend.GetStatus()
+	if smslogger.CheckError(err, "HealthCheck") != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	// backend is sealed
+	if sealed == true {
+		http.Error(w, "Secret Backend is not ready for operations", http.StatusInternalServerError)
+		return
+	}
+
+	// backend is not sealed
+	dname, _ := uuid.GenerateUUID()
+	_, err = h.secretBackend.CreateSecretDomain(dname)
+	if smslogger.CheckError(err, "HealthCheck Create Domain") != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	err = h.secretBackend.DeleteSecretDomain(dname)
+	if smslogger.CheckError(err, "HealthCheck Delete Domain") != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+}
+
 // CreateRouter returns an http.Handler for the registered URLs
 // Takes an interface implementation as input
 func CreateRouter(b smsbackend.SecretBackend) http.Handler {
@@ -262,6 +297,7 @@ func CreateRouter(b smsbackend.SecretBackend) http.Handler {
 	router.HandleFunc("/v1/sms/quorum/unseal", h.unsealHandler).Methods("POST")
 	router.HandleFunc("/v1/sms/quorum/register", h.registerHandler).Methods("POST")
 
+	router.HandleFunc("/v1/sms/healthcheck", h.healthCheckHandler).Methods("GET")
 	router.HandleFunc("/v1/sms/domain", h.createSecretDomainHandler).Methods("POST")
 	router.HandleFunc("/v1/sms/domain/{domName}", h.deleteSecretDomainHandler).Methods("DELETE")
 
