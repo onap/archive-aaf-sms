@@ -69,13 +69,14 @@ docker cp vault.json sms-vault:/vault/config/config.json;
 docker start sms-vault;
 
 # Start SMS
-docker create --rm --name sms-service --network sms-net \
---hostname sms-service -p "10443:10443" \
+# Matching hostname with cert name
+docker create --rm --name aaf-sms.onap --network sms-net \
+--hostname aaf-sms.onap -p "10443:10443" \
 -v sms-service:/sms/auth \
 ${SMS_IMG};
 
-docker cp smsconfig.json sms-service:/sms/smsconfig.json
-docker start sms-service
+docker cp smsconfig.json aaf-sms.onap:/sms/smsconfig.json
+docker start aaf-sms.onap
 
 # Start 3 Quorum Clients
 for i in {0..2}
@@ -96,7 +97,7 @@ fi
 
 # Shutdown and clean up.
 if [ "$1" = "stop" ]; then
-docker stop sms-vault sms-consul sms-service;
+docker stop sms-vault sms-consul aaf-sms.onap;
 for i in {0..2}; do
 docker stop sms-quorum-$i
 done

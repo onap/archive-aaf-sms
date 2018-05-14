@@ -22,21 +22,23 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"encoding/base64"
+	"encoding/pem"
 	"golang.org/x/crypto/openpgp"
 	"golang.org/x/crypto/openpgp/packet"
 	"io/ioutil"
 
+	smsconfig "sms/config"
 	smslogger "sms/log"
 )
 
 // GetTLSConfig initializes a tlsConfig using the CA's certificate
 // This config is then used to enable the server for mutual TLS
-func GetTLSConfig(caCertFile string) (*tls.Config, error) {
+func GetTLSConfig(caCertFile string, certFile string, keyFile string) (*tls.Config, error) {
 
 	// Initialize tlsConfig once
 	caCert, err := ioutil.ReadFile(caCertFile)
 
-	if err != nil {
+	if smslogger.CheckError(err, "Read CA Cert file") != nil {
 		return nil, err
 	}
 
@@ -49,8 +51,59 @@ func GetTLSConfig(caCertFile string) (*tls.Config, error) {
 		ClientCAs:  caCertPool,
 		MinVersion: tls.VersionTLS12,
 	}
+
+	certPEMBlk, err := readPEMBlock(certFile)
+	if smslogger.CheckError(err, "Read Cert File") != nil {
+		return nil, err
+	}
+
+	keyPEMBlk, err := readPEMBlock(keyFile)
+	if smslogger.CheckError(err, "Read Key File") != nil {
+		return nil, err
+	}
+
+	tlsConfig.Certificates = make([]tls.Certificate, 1)
+	tlsConfig.Certificates[0], err = tls.X509KeyPair(certPEMBlk, keyPEMBlk)
+	if smslogger.CheckError(err, "Load x509 cert and key") != nil {
+		return nil, err
+	}
+
 	tlsConfig.BuildNameToCertificate()
 	return tlsConfig, nil
+}
+
+func readPEMBlock(filename string) ([]byte, error) {
+
+	pemData, err := ioutil.ReadFile(filename)
+
+	if smslogger.CheckError(err, "Read PEM File") != nil {
+		return nil, err
+	}
+
+	pemBlock, rest := pem.Decode(pemData)
+	if len(rest) > 0 {
+		smslogger.WriteWarn("Pemfile has extra data")
+	}
+
+	if x509.IsEncryptedPEMBlock(pemBlock) {
+		pByte, err := base64.StdEncoding.DecodeString(smsconfig.SMSConfig.Password)
+		if smslogger.CheckError(err, "Decode PEM Password") != nil {
+			return nil, err
+		}
+
+		pemData, err = x509.DecryptPEMBlock(pemBlock, pByte)
+		if smslogger.CheckError(err, "Decrypt PEM Data") != nil {
+			return nil, err
+		}
+		var newPEMBlock pem.Block
+		newPEMBlock.Type = pemBlock.Type
+		newPEMBlock.Bytes = pemData
+		// Converting back to PEM from DER data you get from
+		// DecryptPEMBlock
+		pemData = pem.EncodeToMemory(&newPEMBlock)
+	}
+
+	return pemData, nil
 }
 
 // GeneratePGPKeyPair produces a PGP key pair and returns

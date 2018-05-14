@@ -29,6 +29,7 @@ type SMSConfiguration struct {
 	CAFile     string `json:"cafile"`
 	ServerCert string `json:"servercert"`
 	ServerKey  string `json:"serverkey"`
+	Password   string `json:"password"`
 
 	BackendAddress            string `json:"smsdbaddress"`
 	VaultToken                string `json:"vaulttoken"`

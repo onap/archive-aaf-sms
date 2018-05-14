@@ -1,7 +1,6 @@
 {
-    "url":"https://sms-service:10443",
-    "servername":"aaf-sms.api.simpledemo.onap.org",
-    "cafile":"cert/aaf_root_ca.cer",
+    "url":"https://aaf-sms.onap:10443",
+    "cafile":"certs/aaf_root_ca.cer",
     "clientcert":"client.cert",
     "clientkey":"client.key",
     "timeout":"10s"

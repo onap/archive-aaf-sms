@@ -28,7 +28,7 @@ function generate_binary {
 }
 
 function copy_certificates {
-    cp ../src/sms/auth/aaf_root_ca.cer .
+    cp ../src/sms/certs/aaf_root_ca.cer .
 }
 
 function cleanup {

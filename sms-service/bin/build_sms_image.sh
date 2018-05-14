@@ -28,16 +28,16 @@ function generate_binary {
 }
 
 function copy_certificates {
-    cp ../src/sms/auth/aaf_root_ca.cer .
-    cp ../src/sms/auth/aaf-sms.api.simpledemo.onap.org.pem .
-    cp ../src/sms/auth/aaf-sms.api.simpledemo.onap.org.pr .
+    cp ../src/sms/certs/aaf_root_ca.cer .
+    cp ../src/sms/certs/aaf-sms.pub .
+    cp ../src/sms/certs/aaf-sms.pr .
 }
 
 function cleanup {
     rm sms
-    rm aaf-sms.api.simpledemo.onap.org.pem
-    rm aaf-sms.api.simpledemo.onap.org.pr
-    rm aaf_root_ca.cer 
+    rm aaf-sms.pub
+    rm aaf-sms.pr
+    rm aaf_root_ca.cer
 }
 
 function build_image {
