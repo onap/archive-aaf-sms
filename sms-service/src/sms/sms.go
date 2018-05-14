@@ -67,14 +67,16 @@ func main() {
 		smslogger.WriteWarn("TLS is Disabled")
 		err = httpServer.ListenAndServe()
 	} else {
-		// TODO: Use CA certificate from AAF
-		tlsConfig, err := smsauth.GetTLSConfig(smsConf.CAFile)
-		if err != nil {
+		// Populate TLSConfig with the certificates and privatekey
+		// information
+		tlsConfig, err := smsauth.GetTLSConfig(smsConf.CAFile, smsConf.ServerCert, smsConf.ServerKey)
+		if smslogger.CheckError(err, "Get TLS Configuration") != nil {
 			log.Fatal(err)
 		}
 
 		httpServer.TLSConfig = tlsConfig
-		err = httpServer.ListenAndServeTLS(smsConf.ServerCert, smsConf.ServerKey)
+		// empty strings because tlsconfig already has this information
+		err = httpServer.ListenAndServeTLS("", "")
 	}
 
 	if err != nil && err != http.ErrServerClosed {

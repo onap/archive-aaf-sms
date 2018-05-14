@@ -1,7 +1,8 @@
 {
-    "cafile":     "cert/aaf_root_ca.cer",
-    "servercert": "cert/aaf-sms.api.simpledemo.onap.org.pem",
-    "serverkey":  "cert/aaf-sms.api.simpledemo.onap.org.pr",
+    "cafile":     "certs/aaf_root_ca.cer",
+    "servercert": "certs/aaf-sms.pub",
+    "serverkey":  "certs/aaf-sms.pr",
+    "password": "c2VjcmV0bWFuYWdlbWVudHNlcnZpY2VzZWNyZXRwYXNzd29yZA==",
 
     "smsdbaddress": "http://sms-vault:8200"
 }

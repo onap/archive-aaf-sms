@@ -5,7 +5,7 @@ LABEL version=2.0.0
 LABEL maintainer="Girish Havaldar <hg0071052@techmahindra.com>"
 
 RUN mkdir -p /quorumclient/auth
-ADD aaf_root_ca.cer /quorumclient/cert/aaf_root_ca.cer
+ADD aaf_root_ca.cer /quorumclient/certs/aaf_root_ca.cer
 ADD quorumclient /quorumclient/bin/quorumclient
 RUN chmod +x /quorumclient/bin/quorumclient
 
