@@ -24,11 +24,16 @@ import (
 //Unit test to varify GetTLSconfig func and varify the tls config min version to be 771
 //Assuming cert file name as auth_test.cert
 func TestGetTLSConfig(t *testing.T) {
-	_, err := GetTLSConfig("filedoesnotexist.cert")
+	_, err := GetTLSConfig("filedoesnotexist.cert", "filedoesnotexist.cert", "filedoesnotexist.cert")
 	if err == nil {
 		t.Errorf("Test failed, expected error but got none")
 	}
-	tlsConfig, err := GetTLSConfig("../test/auth_test.cert")
+	tlsConfig, err := GetTLSConfig("../test/auth_test_certificate.pem",
+		"../test/auth_test_certificate.pem",
+		"../test/auth_test_key.pem")
+	if err != nil {
+		t.Fatal("Test Failed as GetTLSConfig returned error: " + err.Error())
+	}
 	expected := tls.VersionTLS12
 	actual := tlsConfig.MinVersion
 	if tlsConfig != nil {
