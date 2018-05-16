@@ -1,5 +1,5 @@
 buildclient:
-	cd ../../sms-client && echo "Building JAVA client package" && \
+	cd ../../sms-client/java && echo "Building JAVA client package" && \
 	mvn package
 
 build: buildclient
