@@ -98,29 +98,45 @@ public class SmsClient implements SmsInterface {
         return(jsontomap(jobj));
 
     }
-    protected SmsResponse execute(String reqtype, String t, String ins, boolean input, boolean output) {
+
+    /*
+        Inputs reqtype - type of Request, POST, GET, DELETE, PUT
+               urlstr  - url to connect to
+               body    - json encoded data being sent to SMS server
+               output  - expect a response data from SMS server
+        Return SmsResponse Object
+            success or failure
+            response code if connection succeeded, otherwise -1
+            response string if expected.
+    */
+    protected SmsResponse execute(String reqtype, String urlstr, String body,
+        boolean output) {
 
         HttpsURLConnection conn;
         int errorcode = -1;
         SmsResponse resp = new SmsResponse();
 
         try {
-            URL url = new URL(t);
+            URL url = new URL(urlstr);
             conn = (HttpsURLConnection)url.openConnection();
             conn.setSSLSocketFactory(ssf);
             conn.setRequestMethod(reqtype);
-            conn.setDoOutput(true);
-            conn.setDoInput(true);
             conn.setRequestProperty("Content-Type", "application/json");
             conn.setRequestProperty("Accept", "application/json");
 
-            if ( input ) {
+            // If we have any data in body write it out
+            if ( body != null ) {
+                conn.setDoOutput(true);
+                // Implicitly connects and writes data
                 OutputStream out = conn.getOutputStream();
                 OutputStreamWriter wr = new OutputStreamWriter(out);
-                wr.write(ins);
+                wr.write(body);
                 wr.flush();
                 wr.close();
             }
+
+            // Parse the response from Server here
+            // An implicit connection happens here
             errorcode = conn.getResponseCode();
             if ( output && errorcode > 0 ) {
                 InputStream inputstream = conn.getInputStream();
@@ -154,7 +170,7 @@ public class SmsClient implements SmsInterface {
         String t = baset + "/domain";
         String input = "{\"name\":\"" + dname + "\"}";
 
-        SmsResponse resp = execute("POST", t, input, true, true);
+        SmsResponse resp = execute("POST", t, input, true);
         int errcode = resp.getResponseCode();
 
         if ( errcode > 0 && errcode/100 == 2 )
@@ -169,7 +185,7 @@ public class SmsClient implements SmsInterface {
 
         String t = baset + "/domain/" + dname;
 
-        SmsResponse resp = execute("DELETE", t, null, false, true);
+        SmsResponse resp = execute("DELETE", t, null, true);
         int errcode = resp.getResponseCode();
 
         if ( errcode > 0 && errcode/100 == 2 )
@@ -188,7 +204,7 @@ public class SmsClient implements SmsInterface {
         cm.put("values", values);
         JSONObject jobj = new JSONObject(cm);
 
-        SmsResponse resp = execute("POST", t, jobj.toString(), true, false);
+        SmsResponse resp = execute("POST", t, jobj.toString(), false);
         int errcode = resp.getResponseCode();
 
         if ( errcode > 0 && errcode/100 == 2 )
@@ -203,7 +219,7 @@ public class SmsClient implements SmsInterface {
 
         String t = baset + "/domain/" + dname + "/secret";
 
-        SmsResponse resp = execute("GET", t, null, false, true);
+        SmsResponse resp = execute("GET", t, null, true);
         int errcode = resp.getResponseCode();
 
         if ( errcode > 0 && errcode/100 == 2 )
@@ -218,7 +234,7 @@ public class SmsClient implements SmsInterface {
 
         String t = baset + "/domain/" + dname + "/secret/" + sname;
 
-        SmsResponse resp = execute("GET", t, null, false, true);
+        SmsResponse resp = execute("GET", t, null, true);
         int errcode = resp.getResponseCode();
 
         if ( errcode > 0 && errcode/100 == 2 ) {
@@ -243,7 +259,7 @@ public class SmsClient implements SmsInterface {
 
         String t = baset + "/domain/" + dname + "/secret/" + sname;
 
-        SmsResponse resp = execute("DELETE", t, null, false, true);
+        SmsResponse resp = execute("DELETE", t, null, true);
         int errcode = resp.getResponseCode();
 
         if ( errcode > 0 && errcode/100 == 2 )

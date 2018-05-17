@@ -33,6 +33,11 @@ import java.util.Map;
 import org.onap.aaf.sms.SmsClient;
 import org.onap.aaf.sms.SmsResponse;
 
+/*
+ * Sample application demonstrating various operations related
+ * Secret Management Service's APIs
+ */
+
 public class SmsClientExample {
     public static void main(String[] args) throws Exception {
         // Set up the Sun PKCS 11 provider
@@ -66,7 +71,6 @@ public class SmsClientExample {
              trustManagerFactory.getTrustManagers(), new SecureRandom());
         //Create a socket factory
         SSLSocketFactory ssf = context.getSocketFactory();
-        SSLSessionContext sessCtx = context.getServerSessionContext();
         SmsClient sms = new SmsClient("onap.mydomain.com", 10443, ssf);
         SmsResponse resp1 = sms.createDomain("onap.new.test.sms0");
         if ( resp1.getSuccess() ) {

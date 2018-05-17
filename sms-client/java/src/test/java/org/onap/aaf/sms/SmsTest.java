@@ -43,7 +43,7 @@ public class SmsTest extends SmsClient {
     public SmsTest(String host, int port, String version, SSLSocketFactory s) {
         super(host, port, version, s);
     }
-    public  SmsResponse execute(String reqtype, String t, String ins, boolean input, boolean output) {
+    public  SmsResponse execute(String reqtype, String t, String ins, boolean output) {
         Map<String, Object> m;
         SmsResponse resp = new SmsResponse();
         System.out.println(t);
