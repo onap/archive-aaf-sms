@@ -8,6 +8,11 @@
     <name>sms-client</name>
 
     <properties>
+		<nexusproxy>https://nexus.onap.org</nexusproxy>
+		<snapshotNexusPath>/content/repositories/snapshots/</snapshotNexusPath>
+		<releaseNexusPath>/content/repositories/releases/</releaseNexusPath>
+		<stagingNexusPath>/content/repositories/staging/</stagingNexusPath>
+		<sitePath>/content/sites/site/org/onap/aaf/sms/${project.artifactId}/${project.version}</sitePath>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
@@ -49,4 +54,22 @@
             </plugin>
         </plugins>
     </build>
+
+    <distributionManagement>
+		<repository>
+			<id>ecomp-releases</id>
+			<name>AAF SMS Release Repository</name>
+			<url>${nexusproxy}${releaseNexusPath}</url>
+		</repository>
+		<snapshotRepository>
+			<id>ecomp-snapshots</id>
+			<name>AAF SMS Snapshot Repository</name>
+			<url>${nexusproxy}${snapshotNexusPath}</url>
+		</snapshotRepository>
+		<site>
+			<id>ecomp-site</id>
+			<url>dav:${nexusproxy}${sitePath}</url>
+		</site>
+	</distributionManagement>
+
 </project>
