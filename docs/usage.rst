@@ -2,22 +2,34 @@
 .. http://creativecommons.org/licenses/by/4.0
 .. Copyright 2018 Intel Corporation, Inc
 
-Typical Usage Scenario
-======================
+Usage Scenario
+==============
+
+**Create a Domain**
+
+This is the root where you will store your secrets.
 
 .. code-block:: guess
 
-    ## Create a Domain
-    ## This is where all your secrets will be stored
-    curl -H "Accept: application/json" --cacert ca.pem --cert client.cert --key client.key
+    curl -H "Accept: application/json" --cacert ca.pem  --cert client.cert --key client.key
         -X POST \
         -d '{
                 "name": "mysecretdomain"
             }'
-        https://sms:10443/v1/sms/domain
+        https://aaf-sms.onap:10443/v1/sms/domain
 
-    ## Add a new Secret
-    curl -H "Accept: application/json" --cacert ca.pem --cert client.cert --key client.key
+.. end
+
+---------------
+
+**Add a new Secret**
+
+Store a new secret in your created Domain.
+Secrets have a name and a map containing key value pairs.
+
+.. code-block:: guess
+
+    curl -H "Accept: application/json" --cacert ca.pem  --cert client.cert --key client.key
         -X POST \
         -d '{
                 "name": "mysecret",
@@ -27,28 +39,53 @@ Typical Usage Scenario
                     "password": "mypassword"
                 }
             }'
-        https://sms:10443/v1/sms/domain/<domaincurltestdomain/secret
+        https://aaf-sms.onap:10443/v1/sms/domain/<PREVIOUSLY CREATED DOMAIN NAME>/secret
 
+.. end
 
-    ## List all Secrets under a Domain
+---------------
+
+**List all Secret Names in a Domain**
+
+.. code-block:: guess
+
     curl -H "Accept: application/json" --cacert ca.pem --cert client.cert --key client.key
         -X GET \
-        https://sms:10443/v1/sms/domain/curltestdomain/secret
+        https://aaf-sms.onap:10443/v1/sms/domain/<PREVIOUSLY CREATED DOMAIN NAME>/secret
 
-    ## Get a Secret in a Domain
+.. end
+
+---------------
+
+**Get a previously stored Secret from Domain**
+
+.. code-block:: guess
+
     curl -H "Accept: application/json" --cacert ca.pem --cert client.cert --key client.key
         -X GET \
-        https://sms:10443/v1/sms/domain/curltestdomain/secret/curltestsecret1
+        https://aaf-sms.onap:10443/v1/sms/domain/<PREVIOUSLY CREATED DOMAIN NAME>/secret/<PREVIOUSLY CREATED SECRET NAME>
 
-    ## Delete a Secret in specified Domain
+.. end
+
+---------------
+
+**Delete a Secret in specified Domain**
+
+.. code-block:: guess
+
     curl -H "Accept: application/json" --cacert ca.pem --cert client.cert --key client.key
         -X DELETE \
-        https://sms:10443/v1/sms/domain/curltestdomain/secret/curltestsecret1
+        https://aaf-sms.onap:10443/v1/sms/domain/<PREVIOUSLY CREATED DOMAIN NAME>/secret/<PREVIOUSLY CREATED SECRET NAME>
 
-    ## Delete a Domain
-    ## This will delete all the secrets in that Domain
+.. end
+
+---------------
+
+**Delete a Domain**
+
+.. code-block:: guess
+
     curl -H "Accept: application/json" --cacert ca.pem --cert client.cert --key client.key
         -X DELETE \
-        https://sms:10443/v1/sms/domain/curltestdomain
-
+        https://aaf-sms.onap:10443/v1/sms/domain/<PREVIOUSLY CREATED DOMAIN NAME>
 .. end
