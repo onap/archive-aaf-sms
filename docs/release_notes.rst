@@ -3,7 +3,7 @@
 .. Copyright (c) 2018 Intel Corp, Inc.
 
 Release Notes
-=============
+-------------
 
 Version: 2.0.0
 --------------

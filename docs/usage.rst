@@ -3,7 +3,7 @@
 .. Copyright 2018 Intel Corporation, Inc
 
 Usage Scenario
-==============
+--------------
 
 **Create a Domain**
 

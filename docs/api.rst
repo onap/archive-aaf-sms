@@ -3,6 +3,6 @@
 .. Copyright 2018 Intel Corporation, Inc
 
 Secret Management Service API
-=============================
+-----------------------------
 
 .. swaggerv2doc:: api_swagger.json

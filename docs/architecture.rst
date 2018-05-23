@@ -3,7 +3,7 @@
 .. Copyright 2018 Intel Corporation, Inc
 
 Architecture
-============
+------------
 
 This project aims at the Storage of sensitive information such as passwords, username, and tokens.
 
