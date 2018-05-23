@@ -1,0 +1,317 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "description": "This is a service that provides secret management facilities",
+    "version": "1.0.0",
+    "title": "Secret Management Service",
+    "contact": {
+      "email": "kiran.k.kamineni@intel.com"
+    },
+    "license": {
+      "name": "Apache 2.0",
+      "url": "http://www.apache.org/licenses/LICENSE-2.0.html"
+    }
+  },
+  "host": "aaf.onap.org:10443",
+  "basePath": "/v1/sms/",
+  "tags": [
+    {
+      "name": "domain",
+      "description": "Operations related to Secret Domains"
+    },
+    {
+      "name": "secret",
+      "description": "Operations related to Secrets"
+    }
+  ],
+  "schemes": [
+    "https"
+  ],
+  "paths": {
+    "/domain": {
+      "post": {
+        "tags": [
+          "domain"
+        ],
+        "summary": "Add a new domain",
+        "description": "",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/Domain"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Successful Creation",
+            "schema": {
+              "$ref": "#/definitions/Domain"
+            }
+          },
+          "400": {
+            "description": "Invalid input"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/domain/{domainName}": {
+      "delete": {
+        "tags": [
+          "domain"
+        ],
+        "description": "Deletes a domain with provided name",
+        "summary": "Deletes a domain by name",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "domainName",
+            "in": "path",
+            "description": "Name of the domain",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Deletion"
+          },
+          "404": {
+            "description": "Invalid Path or Path not found"
+          }
+        }
+      }
+    },
+    "/domain/{domainName}/secret": {
+      "post": {
+        "tags": [
+          "secret"
+        ],
+        "summary": "Add a new secret",
+        "description": "",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "domainName",
+            "in": "path",
+            "description": "Name of the domain",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/Secret"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Successful Creation"
+          },
+          "404": {
+            "description": "Invalid Path or Path not found"
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "secret"
+        ],
+        "description": "Gets all secret names in this domain",
+        "summary": "List secret Names in this domain",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "domainName",
+            "in": "path",
+            "description": "Name of the domain in which to look at",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful operation",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "secretnames": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  },
+                  "description": "Array of strings referencing the secret names"
+                }
+              },
+              "example": {
+                "secretnames": [
+                  "secretname1",
+                  "secretname2",
+                  "secretname3"
+                ]
+              }
+            }
+          },
+          "404": {
+            "description": "Invalid Path or Path not found"
+          }
+        }
+      }
+    },
+    "/domain/{domainName}/secret/{secretName}": {
+      "get": {
+        "tags": [
+          "secret"
+        ],
+        "summary": "Find Secret by Name",
+        "description": "Returns a single secret",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "domainName",
+            "in": "path",
+            "description": "Name of the domain in which to look at",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "secretName",
+            "in": "path",
+            "description": "Name of the secret which is needed",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "schema": {
+              "$ref": "#/definitions/Secret"
+            }
+          },
+          "404": {
+            "description": "Invalid Path or Path not found"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "secret"
+        ],
+        "summary": "Deletes a Secret",
+        "description": "",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "secretName",
+            "in": "path",
+            "description": "Name of Secret to Delete",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "domainName",
+            "in": "path",
+            "required": true,
+            "description": "Path to the SecretDomain which contains the Secret",
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Deletion"
+          },
+          "404": {
+            "description": "Invalid Path or Path not found"
+          }
+        }
+      }
+    }
+  },
+  "securityDefinitions": {
+    "token": {
+      "type": "apiKey",
+      "name": "token",
+      "in": "header"
+    }
+  },
+  "definitions": {
+    "Credential": {
+      "type": "object",
+      "properties": {
+        "username": {
+          "type": "string"
+        },
+        "password": {
+          "type": "string"
+        }
+      }
+    },
+    "Domain": {
+      "type": "object",
+      "properties": {
+        "uuid": {
+          "type": "string",
+          "description": "Optional value provided by user. If user does not provide, server will auto generate"
+        },
+        "name": {
+          "type": "string",
+          "description": "Name of the secret domain under which all secrets will be stored"
+        }
+      }
+    },
+    "Secret": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Name of the secret"
+        },
+        "values": {
+          "description": "Map of key value pairs that constitute the secret",
+          "type": "object",
+          "additionalProperties": {
+            "type": "object"
+          },
+          "example": {
+            "name": "john",
+            "Age": 40,
+            "admin": true
+          }
+        }
+      }
+    }
+  },
+  "externalDocs": {
+    "description": "Find out more about Swagger",
+    "url": "http://swagger.io"
+  }
+}
