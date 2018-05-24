@@ -39,84 +39,129 @@ import org.onap.aaf.sms.SmsResponse;
  */
 
 public class SmsClientExample {
+
+    public static SSLSocketFactory getSSLSocketFactory(String castore) {
+
+        try {
+            // Load the CA certificate
+            // There are no private keys in the truststore
+            FileInputStream tst = new FileInputStream("truststoreONAP.jks");
+            KeyStore trustStore = KeyStore.getInstance("JKS");
+            char[] password = "password".toCharArray();
+            trustStore.load(tst, password);
+            TrustManagerFactory trustManagerFactory =
+                TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
+            trustManagerFactory.init(trustStore);
+
+            //Create the context
+            SSLContext context = SSLContext.getInstance("TLSv1.2");
+            context.init(null, trustManagerFactory.getTrustManagers(), new SecureRandom());
+            //Create a socket factory
+            SSLSocketFactory ssf = context.getSocketFactory();
+            return ssf;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+
+    }
+
     public static void main(String[] args) throws Exception {
-        // Set up the Sun PKCS 11 provider
-        Provider p = Security.getProvider("SunPKCS11-pkcs11Test");
-        if (p==null) {
-            throw new RuntimeException("could not get security provider");
+
+        SSLSocketFactory ssf = SmsClientExample.getSSLSocketFactory("truststoreONAP.jks");
+
+        // Create the SMSClient
+        SmsClient sms = new SmsClient("aaf-sms.onap", 30243, ssf);
+
+        // Create a test domain
+        System.out.println("CREATE DOMAIN: ");
+        SmsResponse resp = sms.createDomain("sms_test_domain");
+        if ( resp.getSuccess() ) {
+            System.out.println("-- Return Code: " + resp.getResponseCode());
+            System.out.println("-- Return Data: " + resp.getResponse());
+            System.out.println("");
+        } else {
+            System.out.println("-- Error String: " + resp.getErrorMessage());
+            System.out.println("");
         }
 
-        // Load the key store
-        char[] pin = "45789654".toCharArray();
-        KeyStore keyStore = KeyStore.getInstance("PKCS11", p);
-        keyStore.load(null, pin);
+        // Create secret data here
+        Map<String, Object> data_1 = new HashMap<String, Object>();
+        data_1.put("passwd", "gax6ChD0yft");
 
-        // Load the CA certificate
-        FileInputStream tst = new FileInputStream("/ca.jks");
-        KeyStore trustStore = KeyStore.getInstance("JKS");
-        trustStore.load(tst, pin);
+        // Store them in previously created domain
+        System.out.println("STORE SECRET: " + "test_secret");
+        resp = sms.storeSecret("sms_test_domain", "test_secret",  data_1);
+        if ( resp.getSuccess() ) {
+            System.out.println("-- Return Code: " + resp.getResponseCode());
+            System.out.println("");
+        }
 
-        KeyManagerFactory keyManagerFactory =
-             KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
-        //Add to keystore to key manager
-        keyManagerFactory.init(keyStore, pin);
+        // A more complex data example on the same domain
+        Map<String, Object> data_2 = new HashMap<String, Object>();
+        data_2.put("username", "dbuser");
+        data_2.put("isadmin", new Boolean(true));
+        data_2.put("age", new Integer(40));
+        data_2.put("secretkey", "asjdhkuhioeukadfjsadnfkjhsdukfhaskdjhfasdf");
+        data_2.put("token", "2139084553458973452349230849234234908234342");
 
-        TrustManagerFactory trustManagerFactory =
-             TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
-        trustManagerFactory.init(trustStore);
+        // Store the secret
+        System.out.println("STORE SECRET: " + "test_credentials");
+        resp = sms.storeSecret("sms_test_domain", "test_credentials", data_2);
+        if ( resp.getSuccess() ) {
+            System.out.println("-- Return Code: " + resp.getResponseCode());
+            System.out.println("");
+        }
 
-        //Create the context
-        SSLContext context = SSLContext.getInstance("TLS");
-        context.init(keyManagerFactory.getKeyManagers(),
-             trustManagerFactory.getTrustManagers(), new SecureRandom());
-        //Create a socket factory
-        SSLSocketFactory ssf = context.getSocketFactory();
-        SmsClient sms = new SmsClient("onap.mydomain.com", 10443, ssf);
-        SmsResponse resp1 = sms.createDomain("onap.new.test.sms0");
-        if ( resp1.getSuccess() ) {
-            System.out.println(resp1.getResponse());
-            System.out.println(resp1.getResponseCode());
+        // List all secret names stored in domain
+        System.out.println("LIST SECRETS: ");
+        resp = sms.getSecretNames("sms_test_domain");
+        if ( resp.getSuccess() ) {
+            System.out.println("-- Return Code: " + resp.getResponseCode());
+            System.out.println("-- Return Data: " + resp.getResponse());
+            System.out.println("");
         }
-        Map<String, Object> m1 = new HashMap<String, Object>();
-        m1.put("passwd", "gax6ChD0yft");
-        SmsResponse resp2 = sms.storeSecret("onap.new.test.sms0", "testsec",  m1);
-        if ( resp2.getSuccess() ) {
-            System.out.println(resp2.getResponse());
-            System.out.println(resp2.getResponseCode());
+
+        // Retrieve a secret from stored domain
+        System.out.println("GET SECRET: " + "test_secret");
+        resp= sms.getSecret("sms_test_domain", "test_secret");
+        if ( resp.getSuccess() ) {
+            System.out.println("-- Return Code: " + resp.getResponseCode());
+            System.out.println("-- Return Data: " + resp.getResponse());
+            System.out.println("");
         }
-        Map<String, Object> m2 = new HashMap<String, Object>();
-        m2.put("username", "dbuser");
-        m2.put("isadmin", new Boolean(true));
-        m2.put("age", new Integer(40));
-        m2.put("secretkey", "asjdhkuhioeukadfjsadnfkjhsdukfhaskdjhfasdf");
-        m2.put("token", "2139084553458973452349230849234234908234342");
-        SmsResponse resp3 = sms.storeSecret("onap.new.test.sms0","credentials", m2);
-        if ( resp3.getSuccess() ) {
-            System.out.println(resp3.getResponse());
-            System.out.println(resp3.getResponseCode());
-        }
-        SmsResponse resp4 = sms.getSecretNames("onap.new.test.sms0");
-        if ( resp4.getSuccess() ) {
-            System.out.println(resp4.getResponse());
-            System.out.println(resp4.getResponseCode());
-        }
-        SmsResponse resp5= sms.getSecret("onap.new.test.sms0", "testsec");
-        if ( resp5.getSuccess() ) {
-            System.out.println(resp5.getResponse());
-            System.out.println(resp5.getResponseCode());
-        }
-        SmsResponse resp6= sms.getSecret("onap.new.test.sms0", "credentials");
-        if ( resp6.getSuccess() ) {
-            Boolean b = (Boolean)resp6.getResponse().get("isadmin");
+
+        // Retrieve the second secret from stored domain
+        // getResponse() on the return value retrieves the
+        // map containing the key, values for the secret
+        System.out.println("GET SECRET: " + "test_credentials");
+        resp= sms.getSecret("sms_test_domain", "test_credentials");
+        if ( resp.getSuccess() ) {
+            System.out.println("-- Return Code: " + resp.getResponseCode());
+            System.out.println("-- Return Data: " + resp.getResponse());
+
+            //conditional processing of returned data
+            Boolean b = (Boolean)resp.getResponse().get("isadmin");
+            System.out.println("-- isadmin: " + b);
             if ( b )
-                System.out.println("Age=" + (Integer)resp6.getResponse().get("age"));
-            System.out.println(resp6.getResponse());
-            System.out.println(resp6.getResponseCode());
+                System.out.println("-- age: " + (Integer)resp.getResponse().get("age"));
+            System.out.println("");
         }
-        SmsResponse resp7=sms.deleteDomain("onap.new.test.sms0");
-        if ( resp7.getSuccess() ) {
-            System.out.println(resp7.getResponse());
-            System.out.println(resp7.getResponseCode());
+
+        // Delete the secret
+        System.out.println("DELETE SECRET: " + "test_credentials");
+        resp=sms.deleteSecret("sms_test_domain", "test_credentials");
+        if ( resp.getSuccess() ) {
+            System.out.println("-- Return Code: " + resp.getResponseCode());
+            System.out.println("");
+        }
+
+        // Delete the domain
+        System.out.println("DELETE DOMAIN: " + "sms_test_domain");
+        resp=sms.deleteDomain("sms_test_domain");
+        if ( resp.getSuccess() ) {
+            System.out.println("-- Return Code: " + resp.getResponseCode());
+            System.out.println("");
         }
     }
 }

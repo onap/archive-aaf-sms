@@ -139,8 +139,14 @@ public class SmsClient implements SmsInterface {
             // An implicit connection happens here
             errorcode = conn.getResponseCode();
             if ( output && errorcode > 0 ) {
-                InputStream inputstream = conn.getInputStream();
-                InputStreamReader inputstreamreader = new InputStreamReader(inputstream);
+                InputStream inputStream;
+                if ( errorcode/100 == 2) {
+                    inputStream = conn.getInputStream();
+                } else {
+                    inputStream = conn.getErrorStream();
+                }
+
+                InputStreamReader inputstreamreader = new InputStreamReader(inputStream);
                 BufferedReader bufferedreader = new BufferedReader(inputstreamreader);
 
                 String response;
@@ -149,7 +155,7 @@ public class SmsClient implements SmsInterface {
                     save = save + response;
                 }
                 if ( !save.isEmpty() ) {
-                    if ( errorcode/100 == 2 ) {
+                    if ( errorcode/100 == 2) {
                         resp.setResponse(strtomap(save));
                     } else {
                         resp.setErrorMessage(save);
@@ -157,7 +163,6 @@ public class SmsClient implements SmsInterface {
                 }
             }
         } catch ( Exception e ) {
-            e.printStackTrace();
             resp.setResponseCode(errorcode);
             return(resp);
         }
