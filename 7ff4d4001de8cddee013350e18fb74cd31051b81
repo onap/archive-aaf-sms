@@ -1,0 +1,8 @@
+Verified+1: ONAP Jobbuilder <onap-jobbuilder@jenkins.onap.org>
+Code-Review+1: Manjunath Ranganathaiah <manjunath.ranganathaiah@intel.com>
+Code-Review+2: Kiran Kamineni <kiran.k.kamineni@intel.com>
+Submitted-by: Kiran Kamineni <kiran.k.kamineni@intel.com>
+Submitted-at: Fri, 25 May 2018 04:27:08 +0000
+Reviewed-on: https://gerrit.onap.org/r/49055
+Project: aaf/sms
+Branch: refs/heads/master
