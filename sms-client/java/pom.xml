@@ -8,11 +8,11 @@
     <name>sms-client</name>
 
     <properties>
-		<nexusproxy>https://nexus.onap.org</nexusproxy>
-		<snapshotNexusPath>/content/repositories/snapshots/</snapshotNexusPath>
-		<releaseNexusPath>/content/repositories/releases/</releaseNexusPath>
-		<stagingNexusPath>/content/repositories/staging/</stagingNexusPath>
-		<sitePath>/content/sites/site/org/onap/aaf/sms/${project.artifactId}/${project.version}</sitePath>
+        <nexusproxy>https://nexus.onap.org</nexusproxy>
+        <snapshotNexusPath>/content/repositories/snapshots/</snapshotNexusPath>
+        <releaseNexusPath>/content/repositories/releases/</releaseNexusPath>
+        <stagingNexusPath>/content/repositories/staging/</stagingNexusPath>
+        <sitePath>/content/sites/site/org/onap/aaf/sms/${project.artifactId}/${project.version}</sitePath>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
@@ -32,22 +32,22 @@
     <build>
         <plugins>
             <plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-deploy-plugin</artifactId>
-				<configuration>
-					<skip>false</skip>
-				</configuration>
-			</plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-deploy-plugin</artifactId>
+                <configuration>
+                    <skip>false</skip>
+                </configuration>
+            </plugin>
             <plugin>
-				<groupId>org.sonatype.plugins</groupId>
-				<artifactId>nexus-staging-maven-plugin</artifactId>
-				<extensions>true</extensions>
-				<configuration>
-					<nexusUrl>${nexusproxy}</nexusUrl>
-					<stagingProfileId>176c31dfe190a</stagingProfileId>
-					<serverId>ecomp-staging</serverId>
-				</configuration>
-			</plugin>
+                <groupId>org.sonatype.plugins</groupId>
+                <artifactId>nexus-staging-maven-plugin</artifactId>
+                <extensions>true</extensions>
+                <configuration>
+                    <nexusUrl>${nexusproxy}</nexusUrl>
+                    <stagingProfileId>176c31dfe190a</stagingProfileId>
+                    <serverId>ecomp-staging</serverId>
+                </configuration>
+            </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-shade-plugin</artifactId>
@@ -73,20 +73,20 @@
     </build>
 
     <distributionManagement>
-		<repository>
-			<id>ecomp-releases</id>
-			<name>AAF SMS Release Repository</name>
-			<url>${nexusproxy}${releaseNexusPath}</url>
-		</repository>
-		<snapshotRepository>
-			<id>ecomp-snapshots</id>
-			<name>AAF SMS Snapshot Repository</name>
-			<url>${nexusproxy}${snapshotNexusPath}</url>
-		</snapshotRepository>
-		<site>
-			<id>ecomp-site</id>
-			<url>dav:${nexusproxy}${sitePath}</url>
-		</site>
-	</distributionManagement>
+        <repository>
+            <id>ecomp-releases</id>
+            <name>AAF SMS Release Repository</name>
+            <url>${nexusproxy}${releaseNexusPath}</url>
+        </repository>
+        <snapshotRepository>
+            <id>ecomp-snapshots</id>
+            <name>AAF SMS Snapshot Repository</name>
+            <url>${nexusproxy}${snapshotNexusPath}</url>
+        </snapshotRepository>
+        <site>
+            <id>ecomp-site</id>
+            <url>dav:${nexusproxy}${sitePath}</url>
+        </site>
+    </distributionManagement>
 
 </project>
