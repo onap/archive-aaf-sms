@@ -7,7 +7,7 @@ cd ${DOCKER_BUILD_DIR}
 
 BUILD_ARGS="--no-cache"
 ORG="onap"
-VERSION="2.0.0"
+VERSION="3.0.0"
 PROJECT="aaf"
 IMAGE="sms"
 DOCKER_REPOSITORY="nexus3.onap.org:10003"

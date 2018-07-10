@@ -1,7 +1,7 @@
 FROM alpine:3.7
 
 LABEL name="aaf-sms"
-LABEL version=2.0.0
+LABEL version=3.0.0
 LABEL maintainer="vamshi krishna <vn00480215@techmahindra.com>"
 
 EXPOSE 10443
