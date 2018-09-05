@@ -12,19 +12,24 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import json
 import requests
 import requests.exceptions
 import urlparse
 
+name = "onapsmsclient"
+
+
 class InvalidRequestException(Exception):
     pass
+
 
 class InternalServerError(Exception):
     pass
 
+
 class UnexpectedError(Exception):
     pass
+
 
 class Client(object):
     """Python Client for Secret Management Service"""
@@ -99,7 +104,7 @@ class Client(object):
                 'Accept': "application/json"
             }
 
-        #Verify the server or not based on the cacert argument
+        # Verify the server or not based on the cacert argument
         if self.cacert is None:
             verify = False
         else:
@@ -108,11 +113,11 @@ class Client(object):
         url = urlparse.urljoin(self.base_url, url)
         response = self.session.request(method, url, headers=headers,
                                         allow_redirects=False, verify=verify,
-                                        timeout = self.timeout, **kwargs)
+                                        timeout=self.timeout, **kwargs)
 
         errors = None
         if response.status_code >= 400 and response.status_code < 600:
-            #Request Failed. Raise Exception.
+            # Request Failed. Raise Exception.
             errors = response.text
             self._raiseException(response.status_code, errors)
 
@@ -140,12 +145,11 @@ class Client(object):
             string: UUID of the created domain name
         """
 
-
         domainName = domainName.strip()
         data = {"name": domainName}
         url = self._urlJoin(self._base_api_url, 'domain')
 
-        response = self._request('post', url, json = data)
+        response = self._request('post', url, json=data)
         return response.json()['uuid']
 
     def deleteDomain(self, domainName):
@@ -182,7 +186,6 @@ class Client(object):
         response = self._request('get', url)
         return response.json()['secretnames']
 
-
     def storeSecret(self, domainName, secretName, values):
         """Store a Secret in given Domain
 
@@ -205,7 +208,7 @@ class Client(object):
             raise TypeError('Input values is not a dictionary')
 
         data = {"name": secretName, "values": values}
-        self._request('post', url, json = data)
+        self._request('post', url, json=data)
         return True
 
     def getSecret(self, domainName, secretName):
