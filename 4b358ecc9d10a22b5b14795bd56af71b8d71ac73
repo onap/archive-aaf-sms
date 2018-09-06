@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1a76adc5_700b4d8e",
+        "filename": "sms-client/python/onapsmsclient/setup.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 22,
+      "author": {
+        "id": 301
+      },
+      "writtenOn": "2018-09-06T17:24:29Z",
+      "side": 1,
+      "message": "This should be capitalized to ONAP",
+      "range": {
+        "startLine": 22,
+        "startChar": 17,
+        "endLine": 22,
+        "endChar": 21
+      },
+      "revId": "4b358ecc9d10a22b5b14795bd56af71b8d71ac73",
+      "serverId": "14b4e41f-c4e3-4fb9-9955-6a9b5656895a",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1a76adc5_10fc5971",
+        "filename": "sms-client/python/onapsmsclient/setup.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 28,
+      "author": {
+        "id": 301
+      },
+      "writtenOn": "2018-09-06T17:24:29Z",
+      "side": 1,
+      "message": "Should this be Apache 2 license?",
+      "range": {
+        "startLine": 28,
+        "startChar": 13,
+        "endLine": 28,
+        "endChar": 24
+      },
+      "revId": "4b358ecc9d10a22b5b14795bd56af71b8d71ac73",
+      "serverId": "14b4e41f-c4e3-4fb9-9955-6a9b5656895a",
+      "unresolved": false
+    }
+  ]
+}
