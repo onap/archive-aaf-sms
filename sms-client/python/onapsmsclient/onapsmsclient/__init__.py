@@ -16,7 +16,7 @@ import requests
 import requests.exceptions
 import urlparse
 
-name = "onap-sms-client"
+name = "onapsmsclient"
 
 
 class InvalidRequestException(Exception):
