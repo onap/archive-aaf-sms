@@ -1,0 +1,61 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1a76adc5_8eea7daa",
+        "filename": "sms-client/python/onapsmsclient/README.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 2,
+      "author": {
+        "id": 301
+      },
+      "writtenOn": "2018-09-10T23:13:24Z",
+      "side": 1,
+      "message": "nit: space",
+      "range": {
+        "startLine": 2,
+        "startChar": 100,
+        "endLine": 2,
+        "endChar": 101
+      },
+      "revId": "2e9b3ad1683fd2fa7b01d2bc3a0db0bed5ebb440",
+      "serverId": "14b4e41f-c4e3-4fb9-9955-6a9b5656895a",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1a76adc5_eed8d11f",
+        "filename": "sms-client/python/onapsmsclient/setup.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 29,
+      "author": {
+        "id": 301
+      },
+      "writtenOn": "2018-09-10T23:13:24Z",
+      "side": 1,
+      "message": "Add author_email\u003d\u0027kiran.k.kamineni@intel.com\u0027",
+      "revId": "2e9b3ad1683fd2fa7b01d2bc3a0db0bed5ebb440",
+      "serverId": "14b4e41f-c4e3-4fb9-9955-6a9b5656895a",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1a76adc5_0ed66df1",
+        "filename": "sms-client/python/onapsmsclient/setup.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 35,
+      "author": {
+        "id": 301
+      },
+      "writtenOn": "2018-09-10T23:13:24Z",
+      "side": 1,
+      "message": "Should we add:\ninstall_requires\u003d[\n        \u0027requests\u003e\u003d2.7.0\u0027,\n],\nSince we use requests in there.",
+      "revId": "2e9b3ad1683fd2fa7b01d2bc3a0db0bed5ebb440",
+      "serverId": "14b4e41f-c4e3-4fb9-9955-6a9b5656895a",
+      "unresolved": false
+    }
+  ]
+}
