@@ -17,10 +17,10 @@ from setuptools import setup, find_packages
 
 setup(
 
-    name='onap-sms-client',
+    name='onapsmsclient',
     keywords=("secret", "consul", "onap"),
     description="ONAP python SMS client library",
-    long_description="python-package onap-sms-client client library for using"
+    long_description="python-package onapsmsclient client library for using"
                      " Secret Management Service (SMS) inside ONAP. Refer "
                      "https://wiki.onap.org/display/DW/Secret+Management+Service for more details.",
     version="0.0.1",
