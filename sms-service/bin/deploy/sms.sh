@@ -91,7 +91,7 @@ do
 done
 
 # Connect service to host bridge network so that its port can be seen.
-docker network connect bridge sms-service;
+docker network connect bridge aaf-sms.onap;
 SS=1;
 fi
 
