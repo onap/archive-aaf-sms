@@ -40,6 +40,8 @@ type Vault struct {
 	vaultClient           *vaultapi.Client
 	vaultMountPrefix      string
 	internalDomain        string
+	internalDomainUUID    string
+	internalDomainCache   map[string]string
 	internalDomainMounted bool
 	vaultTempTokenTTL     time.Time
 	vaultToken            string
@@ -65,6 +67,8 @@ func (v *Vault) initVaultClient() error {
 	v.vaultClient = client
 	v.vaultMountPrefix = "sms"
 	v.internalDomain = "smsinternaldomain"
+	v.internalDomainUUID, _ = uuid.GenerateUUID()
+	v.internalDomainCache = make(map[string]string)
 	v.internalDomainMounted = false
 	v.prkey = ""
 	return nil
@@ -143,11 +147,17 @@ func (v *Vault) Unseal(shard string) error {
 // GetSecret returns a secret mounted on a particular domain name
 // The secret itself is referenced via its name which translates to
 // a mount path in vault
-func (v *Vault) GetSecret(dom string, name string) (Secret, error) {
+func (v *Vault) GetSecret(uuid string, name string) (Secret, error) {
 
 	err := v.checkToken()
 	if smslogger.CheckError(err, "Tocken Check") != nil {
 		return Secret{}, errors.New("Token check failed")
+	}
+
+	uuid = strings.TrimSpace(uuid)
+	dom, err := v.getDomainNameFromUUID(uuid)
+	if smslogger.CheckError(err, "Lookup Domain Name from UUID") != nil {
+		return Secret{}, errors.New("Unable to Get secret")
 	}
 
 	dom = v.vaultMountPrefix + "/" + dom
@@ -168,11 +178,17 @@ func (v *Vault) GetSecret(dom string, name string) (Secret, error) {
 
 // ListSecret returns a list of secret names on a particular domain
 // The values of the secret are not returned
-func (v *Vault) ListSecret(dom string) ([]string, error) {
+func (v *Vault) ListSecret(uuid string) ([]string, error) {
 
 	err := v.checkToken()
 	if smslogger.CheckError(err, "Token Check") != nil {
 		return nil, errors.New("Token check failed")
+	}
+
+	uuid = strings.TrimSpace(uuid)
+	dom, err := v.getDomainNameFromUUID(uuid)
+	if smslogger.CheckError(err, "Lookup Domain Name from UUID") != nil {
+		return nil, errors.New("Unable to list secrets in domain")
 	}
 
 	dom = v.vaultMountPrefix + "/" + dom
@@ -224,6 +240,7 @@ func (v *Vault) mountInternalDomain(name string) error {
 		if strings.Contains(err.Error(), "existing mount") {
 			// It is already mounted
 			v.internalDomainMounted = true
+			v.internalDomainCache[v.internalDomainUUID] = v.internalDomain
 			return nil
 		}
 		// Ran into some other error mounting it.
@@ -231,6 +248,7 @@ func (v *Vault) mountInternalDomain(name string) error {
 	}
 
 	v.internalDomainMounted = true
+	v.internalDomainCache[v.internalDomainUUID] = v.internalDomain
 	return nil
 }
 
@@ -256,12 +274,59 @@ func (v *Vault) storeUUID(uuid string, name string) error {
 		},
 	}
 
-	err = v.CreateSecret(v.internalDomain, secret)
+	err = v.CreateSecret(v.internalDomainUUID, secret)
 	if smslogger.CheckError(err, "Write UUID to domain") != nil {
 		return err
 	}
 
+	// Cache the value for reverse lookups
+	// Note: Cache is lost when service restarts
+	v.internalDomainCache[uuid] = name
+
 	return nil
+}
+
+// Retrieves UUID for domain name stored in smsinternal domain
+// under v.vaultMountPrefix / smsinternal domain
+func (v *Vault) getDomainNameFromUUID(uuid string) (string, error) {
+
+	// Check Cache
+	if val, ok := v.internalDomainCache[uuid]; ok {
+		return val, nil
+	}
+
+	// If not found in Cache, check in vault
+	// Check if token is still valid
+	err := v.checkToken()
+	if smslogger.CheckError(err, "Token Check") != nil {
+		return "", errors.New("Token Check failed")
+	}
+
+	// Should already be mounted by the initial store command
+	err = v.mountInternalDomain(v.internalDomain)
+	if smslogger.CheckError(err, "Mount Internal Domain") != nil {
+		return "", err
+	}
+
+	secList, err := v.ListSecret(v.internalDomainUUID)
+	if smslogger.CheckError(err, "List Domain Names") != nil {
+		return "", err
+	}
+
+	// Search for domain name in internal domain
+	// Also, refresh the cache with latest content
+	for _, secName := range secList {
+		sec, err := v.GetSecret(v.internalDomainUUID, secName)
+		if smslogger.CheckError(err, "Read Secret Internal Domain") != nil {
+			return "", err
+		}
+		if sec.Values["uuid"] == uuid {
+			v.internalDomainCache[uuid] = sec.Name
+			return sec.Name, nil
+		}
+	}
+
+	return "", errors.New("Unable to find entry in InternalDomain")
 }
 
 // CreateSecretDomain mounts the kv backend on a path with the given name
@@ -303,11 +368,17 @@ func (v *Vault) CreateSecretDomain(name string) (SecretDomain, error) {
 
 // CreateSecret creates a secret mounted on a particular domain name
 // The secret itself is mounted on a path specified by name
-func (v *Vault) CreateSecret(dom string, sec Secret) error {
+func (v *Vault) CreateSecret(uuid string, sec Secret) error {
 
 	err := v.checkToken()
 	if smslogger.CheckError(err, "Token Check") != nil {
 		return errors.New("Token check failed")
+	}
+
+	uuid = strings.TrimSpace(uuid)
+	dom, err := v.getDomainNameFromUUID(uuid)
+	if smslogger.CheckError(err, "Lookup Domain Name from UUID") != nil {
+		return errors.New("Unable to create secret")
 	}
 
 	dom = v.vaultMountPrefix + "/" + dom
@@ -324,14 +395,19 @@ func (v *Vault) CreateSecret(dom string, sec Secret) error {
 
 // DeleteSecretDomain deletes a secret domain which translates to
 // an unmount operation on the given path in Vault
-func (v *Vault) DeleteSecretDomain(name string) error {
+func (v *Vault) DeleteSecretDomain(uuid string) error {
 
 	err := v.checkToken()
 	if smslogger.CheckError(err, "Token Check") != nil {
 		return errors.New("Token Check Failed")
 	}
 
-	name = strings.TrimSpace(name)
+	uuid = strings.TrimSpace(uuid)
+	name, err := v.getDomainNameFromUUID(uuid)
+	if smslogger.CheckError(err, "Lookup Domain Name from UUID") != nil {
+		return errors.New("Unable to delete secret domain")
+	}
+
 	mountPath := v.vaultMountPrefix + "/" + name
 
 	err = v.vaultClient.Sys().Unmount(mountPath)
@@ -343,11 +419,17 @@ func (v *Vault) DeleteSecretDomain(name string) error {
 }
 
 // DeleteSecret deletes a secret mounted on the path provided
-func (v *Vault) DeleteSecret(dom string, name string) error {
+func (v *Vault) DeleteSecret(uuid string, name string) error {
 
 	err := v.checkToken()
 	if smslogger.CheckError(err, "Token Check") != nil {
 		return errors.New("Token check failed")
+	}
+
+	uuid = strings.TrimSpace(uuid)
+	dom, err := v.getDomainNameFromUUID(uuid)
+	if smslogger.CheckError(err, "Lookup Domain Name from UUID") != nil {
+		return errors.New("Unable to delete secret")
 	}
 
 	dom = v.vaultMountPrefix + "/" + dom
