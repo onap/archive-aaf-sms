@@ -23,7 +23,7 @@ setup(
     long_description="python-package onapsmsclient client library for using"
                      " Secret Management Service (SMS) inside ONAP. Refer "
                      "https://wiki.onap.org/display/DW/Secret+Management+Service for more details.",
-    version="0.0.2",
+    version="0.0.3",
     url="https://gerrit.onap.org/r/gitweb?p=aaf%2Fsms.git;a=summary",
     license="Apache 2",
     author="Kiran Kamineni",
