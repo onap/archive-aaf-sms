@@ -133,12 +133,12 @@ func TestDeleteSecretDomain(t *testing.T) {
 	tc, v := createLocalVaultServer(t)
 	defer tc.Cleanup()
 
-	sd, err := v.CreateSecretDomain("testdomain")
+	_, err := v.CreateSecretDomain("testdomain")
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	err = v.DeleteSecretDomain(sd.UUID)
+	err = v.DeleteSecretDomain("testdomain")
 	if err != nil {
 		t.Fatal("DeleteSecretDomain: Unable to delete domain")
 	}
@@ -149,12 +149,12 @@ func TestCreateSecret(t *testing.T) {
 	tc, v := createLocalVaultServer(t)
 	defer tc.Cleanup()
 
-	sd, err := v.CreateSecretDomain("testdomain")
+	_, err := v.CreateSecretDomain("testdomain")
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	err = v.CreateSecret(sd.UUID, secret)
+	err = v.CreateSecret("testdomain", secret)
 
 	if err != nil {
 		t.Fatal("CreateSecret: Error Creating secret")
@@ -166,19 +166,19 @@ func TestGetSecret(t *testing.T) {
 	tc, v := createLocalVaultServer(t)
 	defer tc.Cleanup()
 
-	sd, err := v.CreateSecretDomain("testdomain")
+	_, err := v.CreateSecretDomain("testdomain")
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	err = v.CreateSecret(sd.UUID, secret)
+	err = v.CreateSecret("testdomain", secret)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	sec, err := v.GetSecret(sd.UUID, secret.Name)
+	sec, err := v.GetSecret("testdomain", secret.Name)
 	if err != nil {
-		t.Fatal("GetSecret: Error Creating secret")
+		t.Fatal("GetSecret: Error Getting secret")
 	}
 
 	if sec.Name != secret.Name {
@@ -195,17 +195,17 @@ func TestListSecret(t *testing.T) {
 	tc, v := createLocalVaultServer(t)
 	defer tc.Cleanup()
 
-	sd, err := v.CreateSecretDomain("testdomain")
+	_, err := v.CreateSecretDomain("testdomain")
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	err = v.CreateSecret(sd.UUID, secret)
+	err = v.CreateSecret("testdomain", secret)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	_, err = v.ListSecret(sd.UUID)
+	_, err = v.ListSecret("testdomain")
 	if err != nil {
 		t.Fatal("ListSecret: Returned error")
 	}
@@ -216,17 +216,17 @@ func TestDeleteSecret(t *testing.T) {
 	tc, v := createLocalVaultServer(t)
 	defer tc.Cleanup()
 
-	sd, err := v.CreateSecretDomain("testdomain")
+	_, err := v.CreateSecretDomain("testdomain")
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	err = v.CreateSecret(sd.UUID, secret)
+	err = v.CreateSecret("testdomain", secret)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	err = v.DeleteSecret(sd.UUID, secret.Name)
+	err = v.DeleteSecret("testdomain", secret.Name)
 	if err != nil {
 		t.Fatal("DeleteSecret: Error Creating secret")
 	}
