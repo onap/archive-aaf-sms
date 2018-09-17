@@ -158,45 +158,45 @@ class Client(object):
         response = self._request('post', url, json=data)
         return response.json()['uuid']
 
-    def deleteDomain(self, domainUUID):
+    def deleteDomain(self, domainName):
         """Deletes a Secret Domain
 
         Args:
-            domainUUID (str): UUID of the secret domain to delete
+            domainName (str): Name of the secret domain to delete
 
         Returns:
             bool: True. An exception will be raised if delete failed.
         """
 
-        domainUUID = domainUUID.strip()
-        url = self._urlJoin(self._base_api_url, 'domain', domainUUID)
+        domainName = domainName.strip()
+        url = self._urlJoin(self._base_api_url, 'domain', domainName)
 
         self._request('delete', url)
         return True
 
-    def getSecretNames(self, domainUUID):
+    def getSecretNames(self, domainName):
         """Get all Secret Names in Domain
 
         Args:
-            domainUUID (str): UUID of the secret domain
+            domainName (str): Name of the secret domain
 
         Returns:
             string[]: List of strings each corresponding to a
                       Secret's Name in this Domain.
         """
 
-        domainUUID = domainUUID.strip()
-        url = self._urlJoin(self._base_api_url, 'domain', domainUUID,
+        domainName = domainName.strip()
+        url = self._urlJoin(self._base_api_url, 'domain', domainName,
                             'secret')
 
         response = self._request('get', url)
         return response.json()['secretnames']
 
-    def storeSecret(self, domainUUID, secretName, values):
+    def storeSecret(self, domainName, secretName, values):
         """Store a Secret in given Domain
 
         Args:
-            domainUUID (str): UUID of the secret domain
+            domainName (str): Name of the secret domain
             secretName (str): Name for the Secret
             values (dict): A dict containing name-value pairs which
                            form the secret
@@ -205,9 +205,9 @@ class Client(object):
             bool: True. An exception will be raised if store failed.
         """
 
-        domainUUID = domainUUID.strip()
+        domainName = domainName.strip()
         secretName = secretName.strip()
-        url = self._urlJoin(self._base_api_url, 'domain', domainUUID,
+        url = self._urlJoin(self._base_api_url, 'domain', domainName,
                             'secret')
 
         if not isinstance(values, dict):
@@ -217,11 +217,11 @@ class Client(object):
         self._request('post', url, json=data)
         return True
 
-    def getSecret(self, domainUUID, secretName):
+    def getSecret(self, domainName, secretName):
         """Get a particular Secret from Domain.
 
         Args:
-            domainUUID (str): UUID of the secret domain
+            domainName (str): Name of the secret domain
             secretName (str): Name of the secret
 
         Returns:
@@ -229,28 +229,28 @@ class Client(object):
                   which form the secret
         """
 
-        domainUUID = domainUUID.strip()
+        domainName = domainName.strip()
         secretName = secretName.strip()
-        url = self._urlJoin(self._base_api_url, 'domain', domainUUID,
+        url = self._urlJoin(self._base_api_url, 'domain', domainName,
                             'secret', secretName)
 
         response = self._request('get', url)
         return response.json()['values']
 
-    def deleteSecret(self, domainUUID, secretName):
+    def deleteSecret(self, domainName, secretName):
         """Delete a particular Secret from Domain.
 
         Args:
-            domainUUID (str): UUID of the secret domain
+            domainName (str): Name of the secret domain
             secretName (str): Name of the secret
 
         Returns:
             bool: True. An exception will be raised if delete failed.
         """
 
-        domainUUID = domainUUID.strip()
+        domainName = domainName.strip()
         secretName = secretName.strip()
-        url = self._urlJoin(self._base_api_url, 'domain', domainUUID,
+        url = self._urlJoin(self._base_api_url, 'domain', domainName,
                             'secret', secretName)
 
         self._request('delete', url)
