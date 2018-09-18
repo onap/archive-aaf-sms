@@ -1,0 +1,9 @@
+Verified+1: ONAP Jobbuilder <onap-jobbuilder@jenkins.onap.org>
+Code-Review+1: Dileep Ranganathan <dileep.ranganathan@intel.com>
+Code-Review+2: Kiran Kamineni <kiran.k.kamineni@intel.com>
+Code-Review+2: Girish Havaldar <hg0071052@techmahindra.com>
+Submitted-by: Girish Havaldar <hg0071052@techmahindra.com>
+Submitted-at: Tue, 18 Sep 2018 03:31:40 +0000
+Reviewed-on: https://gerrit.onap.org/r/67095
+Project: aaf/sms
+Branch: refs/heads/master
