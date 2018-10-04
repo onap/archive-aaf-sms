@@ -1,0 +1,22 @@
+{
+    "domains": [{
+        "name": "mysecretdomain   ",
+        "secrets": [
+            {
+                "name": "database-credentials",
+                "values": {
+                    "username": "admin",
+                    "password": "admin",
+                    "ttl": 3600
+                }
+            },
+            {
+                "name": "server-credentials",
+                "values": {
+                    "username": "suser",
+                    "password": "onap"
+                }
+            }
+        ]
+    }]
+}
