@@ -1,0 +1,23 @@
+domains:
+- name: "mysecretdomain"
+  secrets:
+  - name: "admin-database-credentials"
+    values:
+      admin:
+        username: "admin"
+        password: "admin"
+        useralias: "root"
+      dbuser:
+        username: "dbuser"
+        password: "onap"
+        useralias: "nil"
+  - name: "server-credentials"
+    values:
+      admin:
+        username: "admin"
+        password: "admin"
+        useralias: "root"
+      dbuser:
+        username: "dbuser"
+        password: "onap"
+        useralias: "nil"
