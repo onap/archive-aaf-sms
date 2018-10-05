@@ -25,7 +25,11 @@ function generate_binary {
     pushd ../src/sms
     make build
     popd
+    pushd ../src/preload
+    make build
+    popd
     cp ../target/sms .
+    cp ../target/preload .
 }
 
 function copy_certificates {
@@ -35,7 +39,7 @@ function copy_certificates {
 }
 
 function cleanup {
-    rm sms
+    rm sms preload
     rm aaf-sms.pub
     rm aaf-sms.pr
     rm aaf_root_ca.cer

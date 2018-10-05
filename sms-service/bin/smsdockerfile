@@ -12,6 +12,8 @@ ADD aaf-sms.pub /sms/certs/aaf-sms.pub
 ADD aaf-sms.pr /sms/certs/aaf-sms.pr
 ADD sms /sms/bin/sms
 RUN chmod +x /sms/bin/sms
+ADD preload /sms/bin/preload
+RUN chmod +x /sms/bin/preload
 
 WORKDIR /sms
 ENTRYPOINT ["/sms/bin/sms"]
