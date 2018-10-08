@@ -213,19 +213,26 @@ func main() {
 		"Path to the CA Certificate file")
 	serviceurl := flag.String("serviceurl", "https://aaf-sms.onap",
 		"Url for the SMS Service")
-	serviceport := flag.Int("serviceport", 10443,
+	serviceport := flag.String("serviceport", "10443",
 		"Service port if its different than the default")
 	jsondir := flag.String("jsondir", ".",
 		"Folder containing json files to upload")
 
 	flag.Parse()
 
+	//Clear all trailing/leading spaces from incoming strings
+	*cacert = strings.TrimSpace(*cacert)
+	*serviceurl = strings.TrimSpace(*serviceurl)
+	*serviceport = strings.TrimSpace(*serviceport)
+	*jsondir = strings.TrimSpace(*jsondir)
+
 	files, err := ioutil.ReadDir(*jsondir)
 	if err != nil {
 		log.Fatal(pkgerrors.Cause(err))
 	}
 
-	serviceURL, err := url.Parse(*serviceurl + ":" + strconv.Itoa(*serviceport))
+	//URL validity is checked here
+	serviceURL, err := url.Parse(*serviceurl + ":" + *serviceport)
 	if err != nil {
 		log.Fatal(pkgerrors.Cause(err))
 	}
@@ -239,8 +246,8 @@ func main() {
 
 	for _, file := range files {
 		if filepath.Ext(file.Name()) == ".json" {
-			fmt.Println("Processing   ", file.Name())
-			d, err := processJSONFile(file.Name())
+			fmt.Println("Processing   ", filepath.Join(*jsondir, file.Name()))
+			d, err := processJSONFile(filepath.Join(*jsondir, file.Name()))
 			if err != nil {
 				log.Printf("Error Reading %s : %s", file.Name(), pkgerrors.Cause(err))
 				continue
