@@ -115,13 +115,51 @@ func (c *smsClient) init() error {
 	return nil
 }
 
-func (c *smsClient) sendPostRequest(relURL string, message map[string]interface{}) error {
+func (c *smsClient) resolveURL(relURL string) (*url.URL, error) {
 
 	rel, err := url.Parse(relURL)
 	if err != nil {
+		return nil, pkgerrors.Cause(err)
+	}
+
+	return c.BaseURL.ResolveReference(rel), nil
+
+}
+
+func (c *smsClient) sendGetRequest(relURL string) (map[string]interface{}, error) {
+
+	u, err := c.resolveURL(relURL)
+	if err != nil {
+		return nil, pkgerrors.Cause(err)
+	}
+
+	resp, err := c.httpClient.Get(u.String())
+	if err != nil {
+		return nil, pkgerrors.Cause(err)
+	}
+
+	if resp.StatusCode >= 400 && resp.StatusCode < 600 {
+		// Request Failed
+		errText, _ := ioutil.ReadAll(resp.Body)
+		return nil, pkgerrors.Errorf("Request Failed with: %s and Error: %s",
+			resp.Status, string(errText))
+	}
+
+	var result map[string]interface{}
+	err = json.NewDecoder(resp.Body).Decode(&result)
+	if err != nil {
+		return nil, pkgerrors.Cause(err)
+	}
+
+	return result, nil
+}
+
+func (c *smsClient) sendPostRequest(relURL string, message map[string]interface{}) error {
+
+	u, err := c.resolveURL(relURL)
+	if err != nil {
 		return pkgerrors.Cause(err)
 	}
-	u := c.BaseURL.ResolveReference(rel)
 
 	body, err := json.Marshal(message)
 	if err != nil {
@@ -157,8 +195,8 @@ func (c *smsClient) createDomain(domain string) error {
 }
 
 func (c *smsClient) createSecret(domain string, secret string,
-
 	values map[string]interface{}) error {
+
 	message := map[string]interface{}{
 		"name":   secret,
 		"values": values,
@@ -171,6 +209,22 @@ func (c *smsClient) createSecret(domain string, secret string,
 	}
 
 	return nil
+}
+
+func (c *smsClient) isReady() bool {
+
+	url := "v1/sms/quorum/status"
+	res, err := c.sendGetRequest(url)
+	if err != nil {
+		fmt.Println(pkgerrors.Cause(err))
+		return false
+	}
+
+	if res["sealstatus"] == true {
+		return false
+	}
+
+	return true
 }
 
 //uploadToSMS reads through the domain or domains and uploads
@@ -188,6 +242,18 @@ func (c *smsClient) uploadToSMS(data DataJSON) error {
 	} else {
 		return pkgerrors.New("Invalid JSON Data. No domain or domains found")
 	}
+
+	isReady := make(chan bool)
+	go func() {
+		for c.isReady() == false {
+			time.Sleep(5 * time.Second)
+			fmt.Println("Waiting for SMS to accept requests...")
+		}
+		isReady <- true
+	}()
+	<-isReady
+
+	fmt.Println("Uploading data...")
 
 	for _, d := range ldata {
 		err := c.createDomain(d.Name)
