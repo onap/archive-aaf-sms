@@ -287,6 +287,10 @@ func (v *Vault) CreateSecretDomain(name string) (SecretDomain, error) {
 
 	err = v.vaultClient.Sys().Mount(mountPath, mountInput)
 	if smslogger.CheckError(err, "Create Domain") != nil {
+		if strings.Contains(err.Error(), "existing mount") {
+			//It is already mounted
+			return SecretDomain{}, errors.New("existing domain")
+		}
 		return SecretDomain{}, errors.New("Unable to create Secret Domain")
 	}
 
