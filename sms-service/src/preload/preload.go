@@ -189,6 +189,10 @@ func (c *smsClient) createDomain(domain string) error {
 	url := "/v1/sms/domain"
 	err := c.sendPostRequest(url, message)
 	if err != nil {
+		if strings.Contains(err.Error(), "existing domain") {
+			fmt.Println("Domain ", domain, " already exists...")
+			return nil
+		}
 		return pkgerrors.Cause(err)
 	}
 	return nil
