@@ -266,13 +266,13 @@ func (h handler) healthCheckHandler(w http.ResponseWriter, r *http.Request) {
 
 	// backend is not sealed
 	dname, _ := uuid.GenerateUUID()
-	dom, err := h.secretBackend.CreateSecretDomain(dname)
+	_, err = h.secretBackend.CreateSecretDomain(dname)
 	if smslogger.CheckError(err, "HealthCheck Create Domain") != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	err = h.secretBackend.DeleteSecretDomain(dom.UUID)
+	err = h.secretBackend.DeleteSecretDomain(dname)
 	if smslogger.CheckError(err, "HealthCheck Delete Domain") != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
