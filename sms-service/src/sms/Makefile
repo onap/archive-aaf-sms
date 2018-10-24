@@ -1,14 +1,14 @@
 GOPATH := $(shell realpath "$(CURDIR)/../../")
 BINARY := sms
 PLATFORM := linux
-DEPENDENCIES := github.com/golang/dep/cmd/dep
 
 export GOPATH ...
+export GO111MODULE=on
 
 all: test build
 deploy: test build
 
-build: deps format
+build:
 	CGO_ENABLED=0 GOOS=$(PLATFORM) go build -a \
 	-ldflags '-extldflags "-static"' \
 	-o $(GOPATH)/target/$(BINARY) -v sms.go
@@ -17,14 +17,10 @@ clean:
 	go clean
 	rm -f $(GOPATH)/target/$(BINARY)
 
-test: deps
+test:
 	go test -cover ./...
 
 format:
 	go fmt ./...
-
-deps:
-	go get -u $(DEPENDENCIES)
-	$(GOPATH)/bin/dep ensure
 
 .PHONY: test
