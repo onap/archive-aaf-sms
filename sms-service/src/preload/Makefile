@@ -1,14 +1,13 @@
 GOPATH := $(shell realpath "$(CURDIR)/../../")
 BINARY := preload
 PLATFORM := linux
-DEPENDENCIES := github.com/golang/dep/cmd/dep
 
 export GOPATH ...
 
 all: test build
 deploy: test build
 
-build: deps format
+build:
 	CGO_ENABLED=0 GOOS=$(PLATFORM) go build -a \
 	-ldflags '-extldflags "-static"' \
 	-o $(GOPATH)/target/$(BINARY) -v $(BINARY).go
@@ -22,9 +21,5 @@ test:
 
 format:
 	go fmt ./...
-
-deps:
-	go get -u $(DEPENDENCIES)
-	$(GOPATH)/bin/dep ensure
 
 .PHONY: test
