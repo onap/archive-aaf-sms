@@ -76,6 +76,7 @@ type smsClient struct {
 	//In seconds
 	Timeout    int
 	CaCertPath string
+	RetryCount int
 
 	httpClient *http.Client
 }
@@ -260,16 +261,35 @@ func (c *smsClient) uploadToSMS(data DataJSON) error {
 	fmt.Println("Uploading data...")
 
 	for _, d := range ldata {
-		err := c.createDomain(d.Name)
+		var err error
+		for i := 0; i < c.RetryCount; i++ {
+			err = c.createDomain(d.Name)
+			if err != nil {
+				fmt.Println(pkgerrors.Cause(err))
+				fmt.Println("Retrying...")
+				time.Sleep(5 * time.Second)
+			} else {
+				break
+			}
+		}
 		if err != nil {
 			return pkgerrors.Cause(err)
 		}
 
 		for _, s := range d.Secrets {
-			err = c.createSecret(d.Name, s.Name, s.Values)
-			if err != nil {
-				return pkgerrors.Cause(err)
+			for i := 0; i < c.RetryCount; i++ {
+				err = c.createSecret(d.Name, s.Name, s.Values)
+				if err != nil {
+					fmt.Println(pkgerrors.Cause(err))
+					fmt.Println("Retrying...")
+					time.Sleep(5 * time.Second)
+				} else {
+					break
+				}
 			}
+		}
+		if err != nil {
+			return pkgerrors.Cause(err)
 		}
 	}
 
@@ -310,6 +330,7 @@ func main() {
 		Timeout:    30,
 		BaseURL:    serviceURL,
 		CaCertPath: *cacert,
+		RetryCount: 5,
 	}
 	client.init()
 
