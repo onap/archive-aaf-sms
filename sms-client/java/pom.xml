@@ -4,7 +4,7 @@
     <groupId>org.onap.aaf.sms</groupId>
     <artifactId>sms-client</artifactId>
     <packaging>jar</packaging>
-    <version>3.0.0-SNAPSHOT</version>
+    <version>3.0.1-SNAPSHOT</version>
     <name>sms-client</name>
 
     <properties>
