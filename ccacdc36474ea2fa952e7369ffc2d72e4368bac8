@@ -1,0 +1,9 @@
+Code-Review+1: Dileep Ranganathan <dileep.ranganathan@intel.com>
+Code-Review+2: Kiran Kamineni <kiran.k.kamineni@intel.com>
+Verified+1: ONAP Jobbuilder <onap-jobbuilder@jenkins.onap.org>
+Code-Review+2: Jonathan Gathman <jonathan.gathman@att.com>
+Submitted-by: Jonathan Gathman <jonathan.gathman@att.com>
+Submitted-at: Tue, 30 Oct 2018 22:01:29 +0000
+Reviewed-on: https://gerrit.onap.org/r/71500
+Project: aaf/sms
+Branch: refs/heads/master
