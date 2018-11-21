@@ -7,7 +7,7 @@ Installation
 
 **Kubernetes**
 
-The Secret Managment Service project is a sub-project of AAF and will be deployed via Helm on Kubernetes
+The Secret Management Service project is a sub-project of AAF and will be deployed via Helm on Kubernetes
 under the OOM Project umbrella. It will be automatically installed when the AAF chart is installed.
 
 **Standalone Install on Bare-Metal or VM**
