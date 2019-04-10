@@ -7,7 +7,7 @@ cd ${DOCKER_BUILD_DIR}
 
 BUILD_ARGS="--no-cache"
 ORG="onap"
-VERSION="3.0.1"
+VERSION="4.0.0"
 PROJECT="aaf"
 IMAGE="smsquorumclient"
 DOCKER_REPOSITORY="nexus3.onap.org:10003"
