@@ -5,6 +5,25 @@
 Release Notes
 -------------
 
+Version: 4.0.0
+--------------
+
+:Release Date: 2019-05-31
+
+**New Features**
+
+The Dublin Release does not have any major updates to the Secret Management Service
+
+**Bug Fixes**
+
+	- No new fixes were implemented for this release
+
+**Upgrade Notes**
+
+    Use the 4.0.0 image for SMS
+
+===========
+
 Version: 2.0.0
 --------------
 
