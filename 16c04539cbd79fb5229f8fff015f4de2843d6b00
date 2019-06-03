@@ -1,0 +1,8 @@
+Verified+1: ONAP Jobbuilder <onap-jobbuilder@jenkins.onap.org>
+Code-Review+1: Manjunath Ranganathaiah <manjunath.ranganathaiah@intel.com>
+Code-Review+2: Jonathan Gathman <jonathan.gathman@att.com>
+Submitted-by: Jonathan Gathman <jonathan.gathman@att.com>
+Submitted-at: Mon, 03 Jun 2019 22:29:47 +0000
+Reviewed-on: https://gerrit.onap.org/r/c/aaf/sms/+/89187
+Project: aaf/sms
+Branch: refs/heads/master
