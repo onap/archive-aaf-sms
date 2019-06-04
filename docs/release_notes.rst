@@ -23,6 +23,7 @@ The Dublin Release does not have any major updates to the Secret Management Serv
 *Fixed Security Issues*
 
 	- In default deployment AAF SMS (aaf-sms-db) exposes HTTP port 30244 outside of cluster. [`OJSI-121 <https://jira.onap.org/browse/OJSI-121>`_]
+	- Secret Management Service allows to access all stored data. [`OJSI-206 <https://jira.onap.org/browse/OJSI-206>`_]
 
 *Known Security Issues*
 
