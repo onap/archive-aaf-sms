@@ -18,6 +18,14 @@ The Dublin Release does not have any major updates to the Secret Management Serv
 
 	- No new fixes were implemented for this release
 
+**Security Notes**
+
+*Fixed Security Issues*
+
+*Known Security Issues*
+
+*Known Vulnerabilities in Used Modules*
+
 **Upgrade Notes**
 
     Use the 4.0.0 image for SMS
