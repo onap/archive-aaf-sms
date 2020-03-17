@@ -3,11 +3,12 @@ FROM alpine:3.7
 LABEL name="aaf-sms-quorumclient"
 LABEL version=4.0.0
 LABEL maintainer="Girish Havaldar <hg0071052@techmahindra.com>"
-
-RUN mkdir -p /quorumclient/auth
+RUN addgroup aaf && adduser -H -D -g "" -G aaf aaf && \
+    mkdir -p /quorumclient/auth && \
+    chown -R aaf:aaf /quorumclient
 ADD aaf_root_ca.cer /quorumclient/certs/aaf_root_ca.cer
 ADD quorumclient /quorumclient/bin/quorumclient
 RUN chmod +x /quorumclient/bin/quorumclient
-
+USER aaf
 WORKDIR /quorumclient
 ENTRYPOINT ["/quorumclient/bin/quorumclient"]
