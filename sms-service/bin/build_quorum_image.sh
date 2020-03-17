@@ -10,7 +10,7 @@ ORG="onap"
 VERSION="4.0.0"
 PROJECT="aaf"
 IMAGE="smsquorumclient"
-DOCKER_REPOSITORY="nexus3.onap.org:10003"
+DOCKER_REPOSITORY="localhost:5000"
 IMAGE_NAME="${DOCKER_REPOSITORY}/${ORG}/${PROJECT}/${IMAGE}"
 TIMESTAMP=$(date +"%Y%m%dT%H%M%S")
 
