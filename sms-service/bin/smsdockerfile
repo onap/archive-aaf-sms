@@ -5,8 +5,9 @@ LABEL version=4.0.0
 LABEL maintainer="vamshi krishna <vn00480215@techmahindra.com>"
 
 EXPOSE 10443
-
-RUN mkdir -p /sms/auth
+RUN addgroup aaf && adduser -H -D -g "" -G aaf aaf && \
+    mkdir -p /sms/auth && \
+    chown -R aaf:aaf /sms
 ADD aaf_root_ca.cer /sms/certs/aaf_root_ca.cer
 ADD aaf-sms.pub /sms/certs/aaf-sms.pub
 ADD aaf-sms.pr /sms/certs/aaf-sms.pr
@@ -14,6 +15,6 @@ ADD sms /sms/bin/sms
 RUN chmod +x /sms/bin/sms
 ADD preload /sms/bin/preload
 RUN chmod +x /sms/bin/preload
-
+USER aaf
 WORKDIR /sms
 ENTRYPOINT ["/sms/bin/sms"]
