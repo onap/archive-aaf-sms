@@ -1,0 +1,10 @@
+distribution_type: 'container'
+container_release_tag: '4.0.2'
+project: 'aaf-sms'
+log-dir: 'aaf-sms-master-docker-golang-shell-daily/767/'
+ref: 172045b5db0618f288b577a9fdbb8ece3208d687
+containers:
+  - name: 'sms'
+    version: '4.0.0-SNAPSHOT-latest'
+  - name: 'smsquorumclient'
+    version: '4.0.0-SNAPSHOT-latest'
