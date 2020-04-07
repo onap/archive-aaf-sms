@@ -1,0 +1,8 @@
+Verified+1: ONAP Jobbuilder <onap-jobbuilder@jenkins.onap.org>
+Code-Review+1: Jessica Wagantall <jwagantall@linuxfoundation.org>
+Code-Review+2: Gerard Nugent <gerard.nugent@est.tech>
+Submitted-by: Gerard Nugent <gerard.nugent@est.tech>
+Submitted-at: Tue, 07 Apr 2020 08:17:44 +0000
+Reviewed-on: https://gerrit.onap.org/r/c/aaf/sms/+/105134
+Project: aaf/sms
+Branch: refs/heads/master
