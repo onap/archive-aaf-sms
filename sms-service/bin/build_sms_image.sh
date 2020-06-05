@@ -33,17 +33,8 @@ function generate_binary {
     cp ../target/preload .
 }
 
-function copy_certificates {
-    cp ../src/sms/certs/aaf_root_ca.cer .
-    cp ../src/sms/certs/aaf-sms.pub .
-    cp ../src/sms/certs/aaf-sms.pr .
-}
-
 function cleanup {
     rm sms preload
-    rm aaf-sms.pub
-    rm aaf-sms.pr
-    rm aaf_root_ca.cer
 }
 
 function build_image {
@@ -66,7 +57,6 @@ function push_image {
 }
 
 generate_binary
-copy_certificates
 build_image
 push_image
 cleanup
