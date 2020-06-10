@@ -139,20 +139,15 @@ func main() {
 		caCertPool := x509.NewCertPool()
 		caCertPool.AppendCertsFromPEM(caCert)
 
-		/*
-			Support Client certificates once we have auto generated certs
-			Load the client certificate files
-			cert, err := tls.LoadX509KeyPair(cfg.ClientCert, cfg.ClientKey)
-			if err != nil {
-				log.Fatalf("Error while loading key pair %v ", err)
-			}
-		*/
+		cert, err := tls.LoadX509KeyPair(cfg.ClientCert, cfg.ClientKey)
+		if err != nil {
+			log.Fatalf("Error while loading key pair %v ", err)
+		}
 
 		transport.TLSClientConfig = &tls.Config{
 			MinVersion: tls.VersionTLS12,
 			RootCAs:    caCertPool,
-			//Enable once we have proper client certificates
-			//Certificates: []tls.Certificate{cert},
+			Certificates: []tls.Certificate{cert},
 		}
 	}
 
