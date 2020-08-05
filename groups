@@ -1,4 +1,5 @@
 # UUID                                                                  	Group Name
 #
+15ebda71580d04c7da1847723f5b15c22c1136e9                                	saml/onap-gerrit-aaf-sms-committers
 daebbf523be390041a1a9c0e340a6d833aae5043                                	GitHub Replication
 ldap:cn=onap-gerrit-aaf-sms-committers,ou=Groups,dc=freestandards,dc=org	ldap/onap-gerrit-aaf-sms-committers
